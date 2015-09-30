@@ -1,6 +1,6 @@
 {
   "name": "es6-utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "es6 utils",
   "main": "src/index.js",
   "scripts": {
