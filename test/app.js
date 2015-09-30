@@ -4,7 +4,7 @@
  * @since 2015-09-01
  */
 import unused from 'whatwg-fetch';
-import FetchJsonAPI from '../src/request/fetch-json-api.js';
+import {FetchRequest} from '../src/index.js';
 
 const fetch = window.fetch;
 
@@ -14,14 +14,14 @@ fetch('/server.js').then(response => {
   console.log(data);
 });
 
-FetchJsonAPI.post('/posts', {id: 111}).then(data => {
+FetchRequest.post('/posts', {id: 111}).then(data => {
   console.log(data);
 }).then(() => {
-  FetchJsonAPI.get('/posts').then(data => {
+  FetchRequest.get('/posts').then(data => {
     console.log(data);
   })
 });
 
-FetchJsonAPI.delete('/posts/1', {userName:'k'}).then(data => {
+FetchRequest.delete('/posts/1', {userName: 'k'}).then(data => {
   console.log(data);
 });
