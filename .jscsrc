@@ -1,0 +1,13 @@
+{
+  "preset": "google",
+  "validateLineBreaks": "LF",
+  "validateIndentation": 2,
+  "excludeFiles": [
+    "build/**",
+    "node_modules/**"
+  ],
+  "esnext": true,
+  "requirePaddingNewLinesAfterBlocks": true,
+  "requireSemicolons": true,
+  "validateQuoteMarks": "'"
+}

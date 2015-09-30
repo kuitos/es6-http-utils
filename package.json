@@ -1,0 +1,31 @@
+{
+  "name": "es6-utils",
+  "version": "1.0.0",
+  "description": "es6 utils",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "json-mock-kuitos src/mock/db.json -s / -p 8080 & node server.js"
+  },
+  "keywords": [
+    "react",
+    "es6",
+    "utils"
+  ],
+  "author": "Kuitos",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^5.4.7",
+    "babel-eslint": "^4.0.5",
+    "babel-loader": "^5.1.2",
+    "eslint": "^1.5.0",
+    "eslint-friendly-formatter": "^1.2.2",
+    "eslint-loader": "^1.0.0",
+    "eslint-plugin-react": "^3.1.0",
+    "webpack": "^1.9.6",
+    "webpack-dev-server": "^1.8.2"
+  },
+  "dependencies": {
+    "whatwg-fetch": "^0.9.0"
+  }
+}
