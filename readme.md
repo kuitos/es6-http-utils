@@ -2,6 +2,6 @@
 
 #### How to install
 
-```shell
+```bash
 npm install es6-utils
 ```
