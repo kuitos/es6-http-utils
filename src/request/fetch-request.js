@@ -146,23 +146,23 @@ function sendReq(url, method, payload, configs) {
 
 export default {
 
-  get (url, configs){
+  get (url, configs = {}){
     return sendReq(url, REQUEST_METHODS.GET, undefined, configs);
   },
 
-  post (url, payload, configs){
+  post (url, payload, configs = {}){
     return sendReq(url, REQUEST_METHODS.POST, payload, configs);
   },
 
-  put (url, payload, configs){
+  put (url, payload, configs = {}){
     return sendReq(url, REQUEST_METHODS.PUT, payload, configs);
   },
 
-  patch (url, payload, configs){
+  patch (url, payload, configs = {}){
     return sendReq(url, REQUEST_METHODS.PATCH, payload, configs);
   },
 
-  delete (url, configs){
+  delete (url, configs = {}){
     return sendReq(url, REQUEST_METHODS.DELETE, undefined, configs);
   }
 
