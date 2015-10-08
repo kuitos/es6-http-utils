@@ -114,8 +114,8 @@ const REQUEST_METHODS = {
 
 const APPLICATION_JSON = 'application/json';
 
-// fetch默认配置
-let DEFAULT_CONFIG = {
+// fetch通用配置
+let COMMON_CONFIG = {
   headers    : {'Content-Type': `${APPLICATION_JSON};charset=utf-8`, 'X-Requested-With': 'https://github.com/kuitos/'},
   mode       : 'same-origin',
   credentials: 'same-origin',
@@ -130,13 +130,13 @@ function sendReq(url, method, payload, configs) {
     configs.mode = 'cors';
   }
 
-  configs.headers = mergeHeaders(DEFAULT_CONFIG.headers, configs.headers);
+  configs.headers = mergeHeaders(COMMON_CONFIG.headers, configs.headers);
 
   // get和delete方法不允许有请求体
   if (~[REQUEST_METHODS.GET, REQUEST_METHODS.DELETE].indexOf(method)) {
-    init = Object.assign({}, DEFAULT_CONFIG, configs, {method});
+    init = Object.assign({}, COMMON_CONFIG, configs, {method});
   } else {
-    init = Object.assign({body: transformRequest(payload)}, DEFAULT_CONFIG, configs, {method});
+    init = Object.assign({body: transformRequest(payload)}, COMMON_CONFIG, configs, {method});
   }
 
   return fetch(url, init).then(response => {
