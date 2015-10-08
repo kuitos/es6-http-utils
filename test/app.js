@@ -25,3 +25,8 @@ FetchRequest.post('/posts', {id: 111}).then(data => {
 FetchRequest.delete('/posts/1', {userName: 'k'}).then(data => {
   console.log(data);
 });
+
+let xhr = new XMLHttpRequest();
+xhr.open('GET', '/posts');
+xhr.setRequestHeader('X-Powered-By', 'Kuitos');
+xhr.send();
