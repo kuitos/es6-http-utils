@@ -2,7 +2,7 @@
  * @author Kuitos
  * @homepage https://github.com/kuitos/
  * @since 2015-09-21
- * inspiration from angular $http
+ * inspired by angular $http
  * fetch request api基础封装
  */
 
