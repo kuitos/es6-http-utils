@@ -99,10 +99,6 @@ function transformResponse(response) {
 
 }
 
-function mergeHeaders(baseHeaders, ...sourceHeaders) {
-  return Object.assign({}, baseHeaders, ...sourceHeaders);
-}
-
 // 请求方法类型
 const REQUEST_METHODS = {
   GET   : 'GET',
@@ -130,7 +126,7 @@ function sendReq(url, method, payload, configs) {
     configs.mode = 'cors';
   }
 
-  configs.headers = mergeHeaders(COMMON_CONFIG.headers, configs.headers);
+  configs.headers = Object.assign({}, COMMON_CONFIG.headers, configs.headers);
 
   // get和delete方法不允许有请求体
   if (~[REQUEST_METHODS.GET, REQUEST_METHODS.DELETE].indexOf(method)) {
