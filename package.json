@@ -1,10 +1,12 @@
 {
   "name": "es6-utils",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "es6 utils",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:lib": "babel src --out-dir lib",
+    "build:dist": "webpack --config webpack-build.config.js --progress --profile --colors",
+    "dev": "json-mock-kuitos src/mock/db.json -s / -p 8080 & node server.js",
     "start": "json-mock-kuitos src/mock/db.json -s / -p 8080 & node server.js"
   },
   "keywords": [
