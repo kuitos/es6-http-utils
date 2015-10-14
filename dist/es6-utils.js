@@ -94,79 +94,18 @@
 	
 	var _whatwgFetch2 = _interopRequireDefault(_whatwgFetch);
 	
+	var _constantsHttpConstantsJs = __webpack_require__(4);
+	
+	var _utilsBaseUtilJs = __webpack_require__(5);
+	
+	var _utilsWebUtilJs = __webpack_require__(6);
+	
 	var fetch = window.fetch,
 	    Headers = window.Headers;
 	
-	var toString = Object.prototype.toString;
-	
-	function isString(string) {
-	  return typeof string === 'string';
-	}
-	
-	function isObject(value) {
-	  return value !== null && typeof value === 'object';
-	}
-	
-	function isFile(obj) {
-	  return toString.call(obj) === '[object File]';
-	}
-	
-	function isBlob(obj) {
-	  return toString.call(obj) === '[object Blob]';
-	}
-	
-	function isFormData(obj) {
-	  return toString.call(obj) === '[object FormData]';
-	}
-	
-	function toJson(obj) {
-	  if (obj !== undefined) {
-	    return JSON.stringify(obj);
-	  }
-	}
-	
-	/**
-	 * url parser
-	 * @see https://github.com/angular/angular.js/blob/master/src%2Fng%2FurlUtils.js
-	 */
-	var msie = document.documentMode,
-	    urlParsingNode = document.createElement('a'),
-	    originUrl = urlResolve(window.location.href);
-	
-	function urlResolve(url) {
-	
-	  var href = url;
-	
-	  if (msie) {
-	    // Normalize before parse.  Refer Implementation Notes on why this is
-	    // done in two steps on IE.
-	    urlParsingNode.setAttribute('href', href);
-	    href = urlParsingNode.href;
-	  }
-	
-	  urlParsingNode.setAttribute('href', href);
-	
-	  // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
-	  return {
-	    href: urlParsingNode.href,
-	    protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
-	    host: urlParsingNode.host,
-	    search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
-	    hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
-	    hostname: urlParsingNode.hostname,
-	    port: urlParsingNode.port,
-	    pathname: urlParsingNode.pathname.charAt(0) === '/' ? urlParsingNode.pathname : '/' + urlParsingNode.pathname
-	  };
-	}
-	
-	function urlIsSameOrigin(requestUrl) {
-	  var parsed = isString(requestUrl) ? urlResolve(requestUrl) : requestUrl;
-	  return parsed.protocol === originUrl.protocol && parsed.host === originUrl.host;
-	}
-	
 	// 参数为json对象时则作序列化操作
 	function transformRequest(payload) {
-	  return isObject(payload) && !isFile(payload) && !isBlob(payload) && !isFormData(payload) ? toJson(payload) : payload;
+	  return (0, _utilsBaseUtilJs.isObject)(payload) && !(0, _utilsBaseUtilJs.isFile)(payload) && !(0, _utilsBaseUtilJs.isBlob)(payload) && !(0, _utilsBaseUtilJs.isFormData)(payload) ? (0, _utilsBaseUtilJs.toJson)(payload) : payload;
 	}
 	
 	// 响应头为application/json时作反序列化处理
@@ -174,45 +113,75 @@
 	
 	  var contentType = response.headers.get('Content-Type');
 	
-	  if (contentType && contentType.indexOf(APPLICATION_JSON) === 0) {
+	  if (contentType && contentType.indexOf(_constantsHttpConstantsJs.APPLICATION_JSON) === 0) {
 	    return response.json();
 	  } else {
 	    return response;
 	  }
 	}
 	
-	// 请求方法类型
-	var REQUEST_METHODS = {
-	  GET: 'GET',
-	  POST: 'POST',
-	  PUT: 'PUT',
-	  PATCH: 'PATCH',
-	  DELETE: 'DELETE'
-	};
+	function buildUrl(url, params) {
 	
-	var APPLICATION_JSON = 'application/json';
+	  var parts = [],
+	      builtUrl = url;
+	
+	  if (params) {
+	
+	    Object.keys(params).sort().forEach(function (key) {
+	
+	      var value = params[key];
+	
+	      // not undefined or null
+	      if (value != undefined) {
+	
+	        if ((0, _utilsBaseUtilJs.isObject)(value)) {
+	          if ((0, _utilsBaseUtilJs.isDate)(value)) {
+	            value = value.toISOString();
+	          } else if (Array.isArray(value)) {
+	            value = value.join(',');
+	          } else {
+	            value = (0, _utilsBaseUtilJs.toJson)(value);
+	          }
+	        }
+	
+	        parts.push((0, _utilsWebUtilJs.encodeUriQuery)(key) + '=' + (0, _utilsWebUtilJs.encodeUriQuery)(value));
+	      }
+	    });
+	
+	    if (parts.length) {
+	      builtUrl = '' + url + (url.indexOf('?') === -1 ? '?' : '&') + parts.join('&');
+	    }
+	  }
+	
+	  return builtUrl;
+	}
 	
 	// fetch通用配置
 	var COMMON_CONFIG = {
-	  headers: { 'Content-Type': APPLICATION_JSON + ';charset=utf-8', 'X-Requested-With': 'https://github.com/kuitos/' },
+	  headers: { 'Content-Type': _constantsHttpConstantsJs.APPLICATION_JSON + ';charset=utf-8', 'X-Requested-With': 'https://github.com/kuitos/' },
 	  mode: 'same-origin',
 	  credentials: 'same-origin',
 	  cache: 'no-cache'
 	};
 	
-	function sendReq(url, method, payload, configs) {
+	function FetchRequest(url, method, configs) {
 	
 	  var init = undefined;
 	
-	  if (!urlIsSameOrigin(url)) {
+	  if (!(0, _utilsWebUtilJs.urlIsSameOrigin)(url)) {
 	    configs.mode = 'cors';
 	  }
 	
 	  // 合并请求头
 	  configs.headers = Object.assign({}, COMMON_CONFIG.headers, configs.headers);
 	
-	  // get和delete方法不允许有请求体
-	  if (~[REQUEST_METHODS.GET, REQUEST_METHODS.DELETE].indexOf(method)) {
+	  // build url
+	  if (configs.params) {
+	    url = buildUrl(url, configs.params);
+	  }
+	
+	  // 按照restful规范get和delete方法不应该有请求体
+	  if (~[_constantsHttpConstantsJs.REQUEST_METHODS.GET, _constantsHttpConstantsJs.REQUEST_METHODS.DELETE].indexOf(method)) {
 	    init = Object.assign({}, COMMON_CONFIG, configs, { method: method });
 	  } else {
 	    init = Object.assign({ body: transformRequest(payload) }, COMMON_CONFIG, configs, { method: method });
@@ -223,39 +192,41 @@
 	  });
 	}
 	
-	exports['default'] = {
+	FetchRequest.get = function (url, params) {
+	  var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	
-	  get: function get(url) {
-	    var configs = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-	
-	    return sendReq(url, REQUEST_METHODS.GET, undefined, configs);
-	  },
-	
-	  post: function post(url, payload) {
-	    var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-	
-	    return sendReq(url, REQUEST_METHODS.POST, payload, configs);
-	  },
-	
-	  put: function put(url, payload) {
-	    var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-	
-	    return sendReq(url, REQUEST_METHODS.PUT, payload, configs);
-	  },
-	
-	  patch: function patch(url, payload) {
-	    var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-	
-	    return sendReq(url, REQUEST_METHODS.PATCH, payload, configs);
-	  },
-	
-	  'delete': function _delete(url) {
-	    var configs = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-	
-	    return sendReq(url, REQUEST_METHODS.DELETE, undefined, configs);
-	  }
-	
+	  configs.params = params;
+	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.GET, configs);
 	};
+	
+	FetchRequest.post = function (url, payload) {
+	  var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+	
+	  configs.data = payload;
+	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.POST, configs);
+	};
+	
+	FetchRequest.put = function (url, payload) {
+	  var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+	
+	  configs.data = payload;
+	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.PUT, configs);
+	};
+	
+	FetchRequest.patch = function (url, payload) {
+	  var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+	
+	  configs.data = payload;
+	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.PATCH, configs);
+	};
+	
+	FetchRequest['delete'] = function (url) {
+	  var configs = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+	
+	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.DELETE, configs);
+	};
+	
+	exports['default'] = FetchRequest;
 	module.exports = exports['default'];
 
 /***/ },
@@ -593,6 +564,162 @@
 	  self.fetch.polyfill = true
 	})();
 
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	/**
+	 * @author Kuitos
+	 * @homepage https://github.com/kuitos/
+	 * @since 2015-10-14
+	 * http相关的常量
+	 */
+	
+	// 请求方法类型
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	var REQUEST_METHODS = {
+	  GET: 'GET',
+	  POST: 'POST',
+	  PUT: 'PUT',
+	  PATCH: 'PATCH',
+	  DELETE: 'DELETE'
+	};
+	
+	exports.REQUEST_METHODS = REQUEST_METHODS;
+	var APPLICATION_JSON = 'application/json';
+	exports.APPLICATION_JSON = APPLICATION_JSON;
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	/**
+	 * @author Kuitos
+	 * @homepage https://github.com/kuitos/
+	 * @since 2015-10-14
+	 */
+	
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	exports.isString = isString;
+	exports.isObject = isObject;
+	exports.isDate = isDate;
+	exports.isFile = isFile;
+	exports.isBlob = isBlob;
+	exports.isFormData = isFormData;
+	exports.toJson = toJson;
+	var toString = Object.prototype.toString;
+	
+	function isString(string) {
+	  return typeof string === 'string';
+	}
+	
+	function isObject(value) {
+	  return value !== null && typeof value === 'object';
+	}
+	
+	function isDate(date) {
+	  return toString.call(value) === '[object Date]';
+	}
+	
+	function isFile(obj) {
+	  return toString.call(obj) === '[object File]';
+	}
+	
+	function isBlob(obj) {
+	  return toString.call(obj) === '[object Blob]';
+	}
+	
+	function isFormData(obj) {
+	  return toString.call(obj) === '[object FormData]';
+	}
+	
+	function toJson(obj) {
+	  if (obj !== undefined) {
+	    return JSON.stringify(obj);
+	  }
+	}
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	/**
+	 * @author Kuitos
+	 * @homepage https://github.com/kuitos/
+	 * @since 2015-10-14
+	 */
+	
+	/**
+	 * url parser
+	 * @see https://github.com/angular/angular.js/blob/master/src%2Fng%2FurlUtils.js
+	 */
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	exports.urlResolve = urlResolve;
+	exports.urlIsSameOrigin = urlIsSameOrigin;
+	exports.encodeUriQuery = encodeUriQuery;
+	var msie = document.documentMode,
+	    urlParsingNode = document.createElement('a'),
+	    originUrl = urlResolve(window.location.href);
+	
+	function urlResolve(url) {
+	
+	  var href = url;
+	
+	  if (msie) {
+	    // Normalize before parse.  Refer Implementation Notes on why this is
+	    // done in two steps on IE.
+	    urlParsingNode.setAttribute('href', href);
+	    href = urlParsingNode.href;
+	  }
+	
+	  urlParsingNode.setAttribute('href', href);
+	
+	  // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
+	  return {
+	    href: urlParsingNode.href,
+	    protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
+	    host: urlParsingNode.host,
+	    search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
+	    hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
+	    hostname: urlParsingNode.hostname,
+	    port: urlParsingNode.port,
+	    pathname: urlParsingNode.pathname.charAt(0) === '/' ? urlParsingNode.pathname : '/' + urlParsingNode.pathname
+	  };
+	}
+	
+	function urlIsSameOrigin(requestUrl) {
+	  var parsed = isString(requestUrl) ? urlResolve(requestUrl) : requestUrl;
+	  return parsed.protocol === originUrl.protocol && parsed.host === originUrl.host;
+	}
+	
+	/**
+	 * This method is intended for encoding *key* or *value* parts of query component. We need a custom
+	 * method because encodeURIComponent is too aggressive and encodes stuff that doesn't have to be
+	 * encoded per http://tools.ietf.org/html/rfc3986:
+	 *    query       = *( pchar / "/" / "?" )
+	 *    pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+	 *    unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+	 *    pct-encoded   = "%" HEXDIG HEXDIG
+	 *    sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
+	 *                     / "*" / "+" / "," / ";" / "="
+	 */
+	
+	function encodeUriQuery(val, pctEncodeSpaces) {
+	  return encodeURIComponent(val).replace(/%40/gi, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',').replace(/%3B/gi, ';').replace(/%20/g, pctEncodeSpaces ? '%20' : '+');
+	}
 
 /***/ }
 /******/ ]);
