@@ -673,6 +673,7 @@
 	});
 	exports.urlResolve = urlResolve;
 	exports.urlIsSameOrigin = urlIsSameOrigin;
+	exports.encodeUriSegment = encodeUriSegment;
 	exports.encodeUriQuery = encodeUriQuery;
 	
 	var _baseUtilJs = __webpack_require__(5);
@@ -714,6 +715,22 @@
 	function urlIsSameOrigin(requestUrl) {
 	  var parsed = (0, _baseUtilJs.isString)(requestUrl) ? urlResolve(requestUrl) : requestUrl;
 	  return parsed.protocol === originUrl.protocol && parsed.host === originUrl.host;
+	}
+	
+	/**
+	 * We need our custom method because encodeURIComponent is too aggressive and doesn't follow
+	 * http://www.ietf.org/rfc/rfc3986.txt with regards to the character set
+	 * (pchar) allowed in path segments:
+	 *    segment       = *pchar
+	 *    pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+	 *    pct-encoded   = "%" HEXDIG HEXDIG
+	 *    unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+	 *    sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
+	 *                     / "*" / "+" / "," / ";" / "="
+	 */
+	
+	function encodeUriSegment(val) {
+	  return encodeUriQuery(val, true).replace(/%26/gi, '&').replace(/%3D/gi, '=').replace(/%2B/gi, '+');
 	}
 	
 	/**
@@ -759,6 +776,8 @@
 	
 	var _constantsHttpConstantsJs = __webpack_require__(4);
 	
+	var _utilsWebUtilJs = __webpack_require__(6);
+	
 	/**
 	 * use params to fill the url template
 	 * @param urlTemplate
@@ -769,7 +788,7 @@
 	
 	  var generatedUrl = urlTemplate.replace(/:\w+/g, function (match) {
 	    var key = match.substr(1);
-	    return params[key] !== undefined ? params[key] : '';
+	    return params[key] !== undefined ? (0, _utilsWebUtilJs.encodeUriSegment)(params[key]) : '';
 	  });
 	
 	  generatedUrl = generatedUrl.replace(/\/\//g, '/');

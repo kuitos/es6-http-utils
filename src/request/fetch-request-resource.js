@@ -7,6 +7,7 @@
 
 import FetchRequest from './fetch-request.js';
 import {REQUEST_METHODS} from '../constants/http-constants.js';
+import {encodeUriSegment} from '../utils/web-util.js';
 
 /**
  * use params to fill the url template
@@ -18,7 +19,7 @@ function genUrlFromTemplate(urlTemplate, params) {
 
   let generatedUrl = urlTemplate.replace(/:\w+/g, function (match) {
     let key = match.substr(1);
-    return params[key] !== undefined ? params[key] : '';
+    return params[key] !== undefined ? encodeUriSegment(params[key]) : '';
   });
 
   generatedUrl = generatedUrl.replace(/\/\//g, '/');
