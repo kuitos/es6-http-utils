@@ -2,8 +2,7 @@
  * @author Kuitos
  * @homepage https://github.com/kuitos/
  * @since 2015-09-21
- * inspired by angular $http
- * fetch request api基础封装
+ * Fetch request api.Inspired by angular $http
  */
 
 import unused from 'whatwg-fetch';
@@ -14,12 +13,12 @@ import {urlIsSameOrigin, encodeUriQuery} from '../utils/web-util.js';
 const fetch = window.fetch,
   Headers = window.Headers;
 
-// 参数为json对象时则作序列化操作
+// serialize to json string when payload was an object
 function transformRequest(payload) {
   return isObject(payload) && !isFile(payload) && !isBlob(payload) && !isFormData(payload) ? toJson(payload) : payload;
 }
 
-// 响应头为application/json时作反序列化处理
+// deserialize response when response content-type was application/json
 function transformResponse(response) {
 
   let contentType = response.headers.get('Content-Type');
@@ -70,7 +69,7 @@ function buildUrl(url, params) {
   return builtUrl;
 }
 
-// fetch通用配置
+// fetch api common config
 let COMMON_CONFIG = {
   headers    : {'Content-Type': `${APPLICATION_JSON};charset=utf-8`, 'X-Requested-With': 'https://github.com/kuitos/'},
   mode       : 'same-origin',
@@ -78,6 +77,14 @@ let COMMON_CONFIG = {
   cache      : 'no-cache'
 };
 
+/**
+ *
+ * @param url
+ * @param method
+ * @param configs params:url query params data:request payload.Other configs see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch
+ * @returns {*|Promise.<response>}
+ * @constructor
+ */
 function FetchRequest(url, method, configs) {
 
   let init;
@@ -86,7 +93,7 @@ function FetchRequest(url, method, configs) {
     configs.mode = 'cors';
   }
 
-  // 合并请求头
+  // merge headers
   configs.headers = Object.assign({}, COMMON_CONFIG.headers, configs.headers);
 
   // build url
@@ -94,11 +101,11 @@ function FetchRequest(url, method, configs) {
     url = buildUrl(url, configs.params);
   }
 
-  // 按照restful规范get和delete方法不应该有请求体
+  // GET and DELETE should not have request body according to rest specification
   if (~[REQUEST_METHODS.GET, REQUEST_METHODS.DELETE].indexOf(method)) {
     init = Object.assign({}, COMMON_CONFIG, configs, {method});
   } else {
-    init = Object.assign({body: transformRequest(payload)}, COMMON_CONFIG, configs, {method});
+    init = Object.assign({body: transformRequest(configs.data)}, COMMON_CONFIG, configs, {method});
   }
 
   return fetch(url, init).then(response => {
