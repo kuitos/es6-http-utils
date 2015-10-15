@@ -43,7 +43,7 @@ PostsResource.save({id: 11, userName: 'kuitos'}).then(response => {
 PostsResource.update({userName: 'god12312'});
 
 let GitHub = new FetchRequestResource('https://api.github.com/repos/kuitos/kuitos.github.io/issues?per_page=5&page=2', {},
-  {query: {method: 'GET', headers: {Authorization: 'token 1c7271c113339c0a6f50e11c2fec05f0f0d31760'}, isArray: true}});
+  {query: {method: 'GET', headers: {'x-test': 'test'}, isArray: true}});
 
 GitHub.query().then(res => {
   console.log(res);
