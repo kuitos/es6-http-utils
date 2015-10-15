@@ -1,7 +1,7 @@
 {
   "name": "es6-utils",
-  "version": "1.1.0",
-  "description": "es6 utils",
+  "version": "1.2.0",
+  "description": "provide some common utils like http request and so on,written by pure ES6",
   "main": "lib/index.js",
   "scripts": {
     "build:lib": "babel src --out-dir lib",
@@ -10,9 +10,11 @@
     "start": "json-mock-kuitos src/mock/db.json -s / -p 8080 & node server.js"
   },
   "keywords": [
-    "react",
     "es6",
-    "utils"
+    "utils",
+    "fetch api",
+    "ajax",
+    "rest"
   ],
   "author": "Kuitos",
   "license": "MIT",

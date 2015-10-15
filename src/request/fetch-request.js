@@ -81,13 +81,14 @@ let COMMON_CONFIG = {
  *
  * @param url
  * @param method
- * @param configs params:url query params data:request payload.Other configs see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch
+ * @param configs:
+ *           params: url query params
+ *           data: request payload.
+ * Other configs see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch
  * @returns {*|Promise.<response>}
  * @constructor
  */
 function FetchRequest(url, method, configs) {
-
-  let init;
 
   if (!urlIsSameOrigin(url)) {
     configs.mode = 'cors';
@@ -101,12 +102,7 @@ function FetchRequest(url, method, configs) {
     url = buildUrl(url, configs.params);
   }
 
-  // GET and DELETE should not have request body according to rest specification
-  if (~[REQUEST_METHODS.GET, REQUEST_METHODS.DELETE].indexOf(method)) {
-    init = Object.assign({}, COMMON_CONFIG, configs, {method});
-  } else {
-    init = Object.assign({body: transformRequest(configs.data)}, COMMON_CONFIG, configs, {method});
-  }
+  let init = Object.assign({body: transformRequest(configs.data)}, COMMON_CONFIG, configs, {method});
 
   return fetch(url, init).then(response => {
     return transformResponse(response);

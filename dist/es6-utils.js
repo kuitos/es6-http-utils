@@ -68,7 +68,12 @@
 	
 	var _requestFetchRequestJs2 = _interopRequireDefault(_requestFetchRequestJs);
 	
+	var _requestFetchRequestResourceJs = __webpack_require__(7);
+	
+	var _requestFetchRequestResourceJs2 = _interopRequireDefault(_requestFetchRequestResourceJs);
+	
 	exports.FetchRequest = _requestFetchRequestJs2['default'];
+	exports.FetchRequestResource = _requestFetchRequestResourceJs2['default'];
 
 /***/ },
 /* 2 */
@@ -78,8 +83,7 @@
 	 * @author Kuitos
 	 * @homepage https://github.com/kuitos/
 	 * @since 2015-09-21
-	 * inspired by angular $http
-	 * fetch request api基础封装
+	 * Fetch request api.Inspired by angular $http
 	 */
 	
 	'use strict';
@@ -103,12 +107,12 @@
 	var fetch = window.fetch,
 	    Headers = window.Headers;
 	
-	// 参数为json对象时则作序列化操作
+	// serialize to json string when payload was an object
 	function transformRequest(payload) {
 	  return (0, _utilsBaseUtilJs.isObject)(payload) && !(0, _utilsBaseUtilJs.isFile)(payload) && !(0, _utilsBaseUtilJs.isBlob)(payload) && !(0, _utilsBaseUtilJs.isFormData)(payload) ? (0, _utilsBaseUtilJs.toJson)(payload) : payload;
 	}
 	
-	// 响应头为application/json时作反序列化处理
+	// deserialize response when response content-type was application/json
 	function transformResponse(response) {
 	
 	  var contentType = response.headers.get('Content-Type');
@@ -156,7 +160,7 @@
 	  return builtUrl;
 	}
 	
-	// fetch通用配置
+	// fetch api common config
 	var COMMON_CONFIG = {
 	  headers: { 'Content-Type': _constantsHttpConstantsJs.APPLICATION_JSON + ';charset=utf-8', 'X-Requested-With': 'https://github.com/kuitos/' },
 	  mode: 'same-origin',
@@ -164,15 +168,24 @@
 	  cache: 'no-cache'
 	};
 	
+	/**
+	 *
+	 * @param url
+	 * @param method
+	 * @param configs:
+	 *           params: url query params
+	 *           data: request payload.
+	 * Other configs see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch
+	 * @returns {*|Promise.<response>}
+	 * @constructor
+	 */
 	function FetchRequest(url, method, configs) {
-	
-	  var init = undefined;
 	
 	  if (!(0, _utilsWebUtilJs.urlIsSameOrigin)(url)) {
 	    configs.mode = 'cors';
 	  }
 	
-	  // 合并请求头
+	  // merge headers
 	  configs.headers = Object.assign({}, COMMON_CONFIG.headers, configs.headers);
 	
 	  // build url
@@ -180,12 +193,7 @@
 	    url = buildUrl(url, configs.params);
 	  }
 	
-	  // 按照restful规范get和delete方法不应该有请求体
-	  if (~[_constantsHttpConstantsJs.REQUEST_METHODS.GET, _constantsHttpConstantsJs.REQUEST_METHODS.DELETE].indexOf(method)) {
-	    init = Object.assign({}, COMMON_CONFIG, configs, { method: method });
-	  } else {
-	    init = Object.assign({ body: transformRequest(payload) }, COMMON_CONFIG, configs, { method: method });
-	  }
+	  var init = Object.assign({ body: transformRequest(configs.data) }, COMMON_CONFIG, configs, { method: method });
 	
 	  return fetch(url, init).then(function (response) {
 	    return transformResponse(response);
@@ -650,7 +658,7 @@
 
 /***/ },
 /* 6 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * @author Kuitos
@@ -658,10 +666,6 @@
 	 * @since 2015-10-14
 	 */
 	
-	/**
-	 * url parser
-	 * @see https://github.com/angular/angular.js/blob/master/src%2Fng%2FurlUtils.js
-	 */
 	'use strict';
 	
 	Object.defineProperty(exports, '__esModule', {
@@ -670,6 +674,13 @@
 	exports.urlResolve = urlResolve;
 	exports.urlIsSameOrigin = urlIsSameOrigin;
 	exports.encodeUriQuery = encodeUriQuery;
+	
+	var _baseUtilJs = __webpack_require__(5);
+	
+	/**
+	 * url parser
+	 * @see https://github.com/angular/angular.js/blob/master/src%2Fng%2FurlUtils.js
+	 */
 	var msie = document.documentMode,
 	    urlParsingNode = document.createElement('a'),
 	    originUrl = urlResolve(window.location.href);
@@ -701,7 +712,7 @@
 	}
 	
 	function urlIsSameOrigin(requestUrl) {
-	  var parsed = isString(requestUrl) ? urlResolve(requestUrl) : requestUrl;
+	  var parsed = (0, _baseUtilJs.isString)(requestUrl) ? urlResolve(requestUrl) : requestUrl;
 	  return parsed.protocol === originUrl.protocol && parsed.host === originUrl.host;
 	}
 	
@@ -720,6 +731,174 @@
 	function encodeUriQuery(val, pctEncodeSpaces) {
 	  return encodeURIComponent(val).replace(/%40/gi, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',').replace(/%3B/gi, ';').replace(/%20/g, pctEncodeSpaces ? '%20' : '+');
 	}
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * @author Kuitos
+	 * @homepage https://github.com/kuitos/
+	 * @since 2015-10-14
+	 * restful like use fetch api,inspired by ngResource
+	 */
+	
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	var _fetchRequestJs = __webpack_require__(2);
+	
+	var _fetchRequestJs2 = _interopRequireDefault(_fetchRequestJs);
+	
+	var _constantsHttpConstantsJs = __webpack_require__(4);
+	
+	/**
+	 * use params to fill the url template
+	 * @param urlTemplate
+	 * @param params
+	 * @returns filled url template
+	 */
+	function genUrlFromTemplate(urlTemplate, params) {
+	
+	  var generatedUrl = urlTemplate.replace(/:\w+/g, function (match) {
+	    var key = match.substr(1);
+	    return params[key] !== undefined ? params[key] : '';
+	  });
+	
+	  generatedUrl = generatedUrl.replace(/\/\//g, '/');
+	
+	  return generatedUrl;
+	}
+	
+	/**
+	 * get the rest params after url template use up
+	 * @param urlTemplate
+	 * @param params
+	 * @returns rest params
+	 */
+	function getRestParamsFromUrlTemplate(urlTemplate, params) {
+	
+	  var restParams = Object.assign({}, params);
+	
+	  (urlTemplate.match(/:\w+/g) || []).forEach(function (key) {
+	    delete restParams[key.substr(1)];
+	  });
+	
+	  return restParams;
+	}
+	
+	var FetchRequestResource =
+	
+	/**
+	 * Resource Constructor
+	 * @param urlTemplate
+	 * @param defaultParams
+	 * @param actions
+	 *          {get:{method:...,headers:....}} see fetch api config
+	 * @returns {} resource instance
+	 */
+	function FetchRequestResource(urlTemplate, defaultParams) {
+	  var actions = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+	
+	  _classCallCheck(this, FetchRequestResource);
+	
+	  var resource = {};
+	  // POST|PUT|PATCH can have request body according to rest specification
+	  var methodsCanHaveBody = [_constantsHttpConstantsJs.REQUEST_METHODS.POST, _constantsHttpConstantsJs.REQUEST_METHODS.PUT, _constantsHttpConstantsJs.REQUEST_METHODS.PATCH];
+	
+	  Object.keys(Object.assign(actions, FetchRequestResource.defaults.actions)).forEach(function (actionName) {
+	
+	    /**
+	     * generate resource method
+	     * @returns {Promise.<response>}
+	     */
+	    resource[actionName] = function () {
+	      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+	        args[_key] = arguments[_key];
+	      }
+	
+	      var configs = {},
+	          action = actions[actionName],
+	          method = action.method,
+	          hasBody = !! ~methodsCanHaveBody.indexOf(method),
+	          params = undefined;
+	
+	      switch (args.length) {
+	
+	        case 2:
+	          params = args[0];
+	          configs.data = args[1];
+	          break;
+	
+	        case 1:
+	          if (hasBody) {
+	            configs.data = args[0];
+	          } else {
+	            params = args[0];
+	          }
+	          break;
+	
+	        case 0:
+	          break;
+	
+	        default:
+	          throw new Error('unexpected arguments!');
+	
+	      }
+	
+	      // fill configs from action
+	      Object.keys(action).forEach(function (prop) {
+	
+	        if (prop !== 'isArray') {
+	          configs[prop] = action[prop];
+	        }
+	      });
+	
+	      var extractParams = Object.assign({}, defaultParams, params);
+	      var url = genUrlFromTemplate(urlTemplate, extractParams);
+	
+	      configs.params = getRestParamsFromUrlTemplate(urlTemplate, extractParams);
+	
+	      return (0, _fetchRequestJs2['default'])(url, method, configs).then(function (response) {
+	
+	        if (!!action.isArray !== Array.isArray(response)) {
+	          throw new Error(method + ' request to url:' + url + ' occurred an error in resource configuration for action ' + actionName + '.\n            Expected response to contain an ' + (action.isArray ? 'array' : 'object') + ' but got an ' + (Array.isArray(response) ? 'array' : 'object'));
+	        }
+	
+	        return response;
+	      });
+	    };
+	  });
+	
+	  return resource;
+	}
+	
+	// resource defaults configurations
+	;
+	
+	FetchRequestResource.defaults = {
+	
+	  actions: {
+	    'get': { method: _constantsHttpConstantsJs.REQUEST_METHODS.GET },
+	    'query': { method: _constantsHttpConstantsJs.REQUEST_METHODS.GET, isArray: true },
+	    'save': { method: _constantsHttpConstantsJs.REQUEST_METHODS.POST },
+	    'update': { method: _constantsHttpConstantsJs.REQUEST_METHODS.PUT },
+	    'partUpdate': { method: _constantsHttpConstantsJs.REQUEST_METHODS.PATCH },
+	    'delete': { method: _constantsHttpConstantsJs.REQUEST_METHODS.DELETE }, // physical delete
+	    'remove': { method: _constantsHttpConstantsJs.REQUEST_METHODS.DELETE } // logical delete
+	  }
+	
+	};
+	
+	exports['default'] = FetchRequestResource;
+	module.exports = exports['default'];
 
 /***/ }
 /******/ ]);
