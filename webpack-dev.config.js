@@ -9,7 +9,7 @@ var webpack = require('webpack');
 module.exports = {
   devtool: 'source-map',
   entry  : [
-    'webpack-dev-server/client?http://localhost:3000',
+    'webpack-hot-middleware/client?path=http://localhost:3000/__webpack_hmr',
     './test/app'
   ],
   output : {
