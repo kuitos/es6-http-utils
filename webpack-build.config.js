@@ -12,8 +12,8 @@ module.exports = {
     './src/index'
   ],
   output : {
-    path      : path.join(__dirname, 'dist'),
-    filename  : 'es6-utils.js'
+    path    : path.join(__dirname, 'dist'),
+    filename: 'es6-utils.js'
   },
   plugins: [
     new webpack.NoErrorsPlugin()
