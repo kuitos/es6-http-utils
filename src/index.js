@@ -3,10 +3,10 @@
  * @homepage https://github.com/kuitos/
  * @since 2015-09-30
  */
-import FetchRequest from './request/fetch-request.js';
-import FetchRequestResource from './request/fetch-request-resource.js';
+import FetchHttp from './http/fetch-http.js';
+import FetchHttpResource from './http/fetch-http-resource.js';
 
 export {
-  FetchRequest,
-  FetchRequestResource
+  FetchHttp,
+  FetchHttpResource
 };

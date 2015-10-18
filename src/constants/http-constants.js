@@ -11,10 +11,8 @@ export const REQUEST_METHODS = {
   POST  : 'POST',
   PUT   : 'PUT',
   PATCH : 'PATCH',
-  DELETE: 'DELETE'
+  DELETE: 'DELETE',
+  HEAD  : 'HEAD'
 };
 
 export const APPLICATION_JSON = 'application/json';
-
-
-

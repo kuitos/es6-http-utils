@@ -5,7 +5,7 @@
  * restful like use fetch api,inspired by ngResource
  */
 
-import FetchRequest from './fetch-request.js';
+import FetchHttp from './fetch-http.js';
 import {REQUEST_METHODS} from '../constants/http-constants.js';
 import {encodeUriSegment} from '../utils/web-util.js';
 
@@ -45,7 +45,7 @@ function getRestParamsFromUrlTemplate(urlTemplate, params) {
   return restParams;
 }
 
-class FetchRequestResource {
+class FetchHttpResource {
 
   /**
    * Resource Constructor
@@ -61,7 +61,7 @@ class FetchRequestResource {
     // POST|PUT|PATCH can have request body according to rest specification
     let methodsCanHaveBody = [REQUEST_METHODS.POST, REQUEST_METHODS.PUT, REQUEST_METHODS.PATCH];
 
-    Object.keys(Object.assign(actions, FetchRequestResource.defaults.actions)).forEach(actionName => {
+    Object.keys(Object.assign(actions, FetchHttpResource.defaults.actions)).forEach(actionName => {
 
       /**
        * generate resource method
@@ -112,7 +112,7 @@ class FetchRequestResource {
 
         configs.params = getRestParamsFromUrlTemplate(urlTemplate, extractParams);
 
-        return FetchRequest(url, method, configs).then(response => {
+        return FetchHttp(url, method, configs).then(response => {
 
           if (!!action.isArray !== Array.isArray(response)) {
             throw new Error(`${method} request to url:${url} occurred an error in resource configuration for action ${actionName}.
@@ -132,7 +132,7 @@ class FetchRequestResource {
 }
 
 // resource defaults configurations
-FetchRequestResource.defaults = {
+FetchHttpResource.defaults = {
 
   actions: {
     'get'       : {method: REQUEST_METHODS.GET},
@@ -146,4 +146,4 @@ FetchRequestResource.defaults = {
 
 };
 
-export default FetchRequestResource;
+export default FetchHttpResource;

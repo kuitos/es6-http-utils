@@ -73,7 +73,7 @@
 	var _requestFetchRequestResourceJs2 = _interopRequireDefault(_requestFetchRequestResourceJs);
 	
 	exports.FetchRequest = _requestFetchRequestJs2['default'];
-	exports.FetchRequestResource = _requestFetchRequestResourceJs2['default'];
+	exports.FetcHttpResource = _requestFetchRequestResourceJs2['default'];
 
 /***/ },
 /* 2 */
@@ -104,8 +104,9 @@
 	
 	var _utilsWebUtilJs = __webpack_require__(6);
 	
-	var fetch = window.fetch,
-	    Headers = window.Headers;
+	var fetch = window.fetch;
+	var Request = window.Request;
+	var Response = window.Response;
 	
 	// serialize to json string when payload was an object
 	function transformRequest(payload) {
@@ -126,7 +127,7 @@
 	
 	function buildUrl(url, params) {
 	
-	  var parts = [],
+	  var queryParams = [],
 	      builtUrl = url;
 	
 	  if (params) {
@@ -142,18 +143,19 @@
 	          if ((0, _utilsBaseUtilJs.isDate)(value)) {
 	            value = value.toISOString();
 	          } else if (Array.isArray(value)) {
+	            // according to rest specification array should be separated by comma in url
 	            value = value.join(',');
 	          } else {
 	            value = (0, _utilsBaseUtilJs.toJson)(value);
 	          }
 	        }
 	
-	        parts.push((0, _utilsWebUtilJs.encodeUriQuery)(key) + '=' + (0, _utilsWebUtilJs.encodeUriQuery)(value));
+	        queryParams.push((0, _utilsWebUtilJs.encodeUriQuery)(key) + '=' + (0, _utilsWebUtilJs.encodeUriQuery)(value));
 	      }
 	    });
 	
-	    if (parts.length) {
-	      builtUrl = '' + url + (url.indexOf('?') === -1 ? '?' : '&') + parts.join('&');
+	    if (queryParams.length) {
+	      builtUrl = '' + url + (url.indexOf('?') === -1 ? '?' : '&') + queryParams.join('&');
 	    }
 	  }
 	
@@ -166,6 +168,12 @@
 	  mode: 'same-origin',
 	  credentials: 'same-origin',
 	  cache: 'no-cache'
+	};
+	
+	var FetchRequestConfig = {
+	
+	  interceptors: []
+	
 	};
 	
 	/**
@@ -195,9 +203,18 @@
 	
 	  var init = Object.assign({ body: transformRequest(configs.data) }, COMMON_CONFIG, configs, { method: method });
 	
-	  return fetch(url, init).then(function (response) {
-	    return transformResponse(response);
-	  });
+	  var request = new Request(url, init);
+	
+	  var serverRequest = function serverRequest(request) {
+	    return fetch(request).then(transformResponse, transformResponse);
+	  };
+	
+	  var chain = [serverRequest, undefined];
+	  var interceptors = FetchRequestConfig.interceptors;
+	
+	  while (interceptors.length--) {
+	    var a = 10;
+	  }
 	}
 	
 	FetchRequest.get = function (url, params) {
@@ -823,16 +840,16 @@
 	 *          {get:{method:...,headers:....}} see fetch api config
 	 * @returns {} resource instance
 	 */
-	function FetchRequestResource(urlTemplate, defaultParams) {
+	function FetcHttpResource(urlTemplate, defaultParams) {
 	  var actions = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	
-	  _classCallCheck(this, FetchRequestResource);
+	  _classCallCheck(this, FetcHttpResource);
 	
 	  var resource = {};
 	  // POST|PUT|PATCH can have request body according to rest specification
 	  var methodsCanHaveBody = [_constantsHttpConstantsJs.REQUEST_METHODS.POST, _constantsHttpConstantsJs.REQUEST_METHODS.PUT, _constantsHttpConstantsJs.REQUEST_METHODS.PATCH];
 	
-	  Object.keys(Object.assign(actions, FetchRequestResource.defaults.actions)).forEach(function (actionName) {
+	  Object.keys(Object.assign(actions, FetcHttpResource.defaults.actions)).forEach(function (actionName) {
 	
 	    /**
 	     * generate resource method
@@ -902,7 +919,7 @@
 	// resource defaults configurations
 	;
 	
-	FetchRequestResource.defaults = {
+	FetcHttpResource.defaults = {
 	
 	  actions: {
 	    'get': { method: _constantsHttpConstantsJs.REQUEST_METHODS.GET },
@@ -916,7 +933,7 @@
 	
 	};
 	
-	exports['default'] = FetchRequestResource;
+	exports['default'] = FetcHttpResource;
 	module.exports = exports['default'];
 
 /***/ }

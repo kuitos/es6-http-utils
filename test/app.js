@@ -4,7 +4,7 @@
  * @since 2015-09-01
  */
 import unused from 'whatwg-fetch';
-import {FetchRequest, FetchRequestResource} from '../src/index.js';
+import {FetchHttp, FetcHttpResource} from '../src/index.js';
 
 const fetch = window.fetch;
 
@@ -14,15 +14,15 @@ const fetch = window.fetch;
 //  console.log(data);
 //});
 //
-//FetchRequest.post('/posts', {id: 111}).then(data => {
+//FetchHttp.post('/posts', {id: 111}).then(data => {
 //  console.log(data);
 //}).then(() => {
-//  FetchRequest.get('/posts').then(data => {
+//  FetchHttp.get('/posts').then(data => {
 //    console.log(data);
 //  })
 //});
 //
-//FetchRequest.delete('/posts/1', {userName: 'k'}).then(data => {
+//FetchHttp.delete('/posts/1', {userName: 'k'}).then(data => {
 //  console.log(data);
 //});
 //
@@ -31,7 +31,7 @@ const fetch = window.fetch;
 //xhr.setRequestHeader('X-Powered-By', 'Kuitos');
 //xhr.send();
 
-let PostsResource = new FetchRequestResource('/posts/:postId/', {postId: 11});
+let PostsResource = new FetcHttpResource('/posts/:postId/', {postId: 11});
 PostsResource.query().then(response => {
   console.log(response);
 });
@@ -42,7 +42,7 @@ PostsResource.save({id: 11, userName: 'kuitos'}).then(response => {
 
 PostsResource.update({userName: 'god12312'});
 
-let GitHub = new FetchRequestResource('https://api.github.com/repos/kuitos/kuitos.github.io/issues?per_page=5&page=2', {},
+let GitHub = new FetcHttpResource('https://api.github.com/repos/kuitos/kuitos.github.io/issues?per_page=5&page=2', {},
   {query: {method: 'GET', headers: {'x-test': 'test'}, isArray: true}});
 
 GitHub.query().then(res => {

@@ -14,8 +14,12 @@ export function isObject(value) {
   return value !== null && typeof value === 'object';
 }
 
+export function isFunction(fn) {
+  return typeof fn === 'function';
+}
+
 export function isDate(date) {
-  return toString.call(value) === '[object Date]';
+  return toString.call(date) === '[object Date]';
 }
 
 export function isFile(obj) {
