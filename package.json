@@ -1,7 +1,7 @@
 {
-  "name": "es6-utils",
+  "name": "web-fetch-request",
   "version": "1.2.0",
-  "description": "provide some common utils like http request and so on,written by pure ES6",
+  "description": "a web request module build with fetch api & es6,without any other dependencies",
   "main": "lib/index.js",
   "scripts": {
     "build:lib": "babel src --out-dir lib",
