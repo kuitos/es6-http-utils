@@ -11,8 +11,8 @@ npm install web-fetch-request
 #### 工具说明
 
 * 一个网络请求模块，基于[fetch api](https://fetch.spec.whatwg.org/) & [es6 promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise),可直接替代ajax
-	* RequestFetch 封装fetch api，提供get｜post｜put｜patch｜delete等基础封装，类似angular的[$http服务](https://docs.angularjs.org/api/ng/service/$http).支持跨域调用.
-	* RequestFetchResource 在RequestFetch基础上针对rest api定制的resource构造器，类似angular的ngResource模块，用法跟[$resource](https://docs.angularjs.org/api/ngResource/service/$resource)类似
+	* FetchHttp 封装fetch api，提供get｜post｜put｜patch｜delete等基础封装，类似angular的[$http服务](https://docs.angularjs.org/api/ng/service/$http).支持跨域调用.
+	* FetchHttpResource 在RequestFetch基础上针对rest api定制的resource构造器，类似angular的ngResource模块，用法跟[$resource](https://docs.angularjs.org/api/ngResource/service/$resource)类似
 
 
 #### 目录说明
