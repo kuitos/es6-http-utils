@@ -115,8 +115,8 @@ class FetchHttpResource {
         return FetchHttp(url, method, configs).then(response => {
 
           if (!!action.isArray !== Array.isArray(response)) {
-            throw new Error(`${method} request to url:${url} occurred an error in resource configuration for action ${actionName}.
-            Expected response to contain an ${action.isArray ? 'array' : 'object'} but got an ${Array.isArray(response) ? 'array' : 'object'}`);
+            throw new Error(`${method} request to url:${url} occurred an error in resource configuration for action ${actionName}.` +
+              `Expected response to contain an ${action.isArray ? 'array' : 'object'} but got an ${Array.isArray(response) ? 'array' : 'object'}`);
           }
 
           return response;

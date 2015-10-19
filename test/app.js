@@ -3,48 +3,6 @@
  * @homepage https://github.com/kuitos/
  * @since 2015-09-01
  */
-import unused from 'whatwg-fetch';
-import {FetchHttp, FetcHttpResource} from '../src/index.js';
 
-const fetch = window.fetch;
-
-//fetch('/server.js').then(response => {
-//  return response.text();
-//}).then(data => {
-//  console.log(data);
-//});
-//
-//FetchHttp.post('/posts', {id: 111}).then(data => {
-//  console.log(data);
-//}).then(() => {
-//  FetchHttp.get('/posts').then(data => {
-//    console.log(data);
-//  })
-//});
-//
-//FetchHttp.delete('/posts/1', {userName: 'k'}).then(data => {
-//  console.log(data);
-//});
-//
-//let xhr = new XMLHttpRequest();
-//xhr.open('GET', '/posts');
-//xhr.setRequestHeader('X-Powered-By', 'Kuitos');
-//xhr.send();
-
-let PostsResource = new FetcHttpResource('/posts/:postId/', {postId: 11});
-PostsResource.query().then(response => {
-  console.log(response);
-});
-
-PostsResource.save({id: 11, userName: 'kuitos'}).then(response => {
-  console.log(response);
-});
-
-PostsResource.update({userName: 'god12312'});
-
-let GitHub = new FetcHttpResource('https://api.github.com/repos/kuitos/kuitos.github.io/issues?per_page=5&page=2', {},
-  {query: {method: 'GET', headers: {'x-test': 'test'}, isArray: true}});
-
-GitHub.query().then(res => {
-  console.log(res);
-});
+import unused1 from './fetch-http-resource-test.js';
+import unused2 from './fetch-http-test.js';

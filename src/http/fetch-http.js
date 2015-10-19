@@ -13,53 +13,77 @@ import {urlIsSameOrigin, encodeUriQuery} from '../utils/web-util.js';
 const fetch = window.fetch;
 const Request = window.Request;
 const Response = window.Response;
+const Headers = window.Headers;
+
+function getHeadersGetter(headers) {
+  headers = new Headers(headers);
+  return headers.get.bind(headers);
+}
 
 // serialize to json string when payload was an object
-function defaultRequestTransformer(request) {
-  let body = request.body;
-  request.body = isObject(body) && !isFile(body) && !isBlob(body) && !isFormData(body) ? toJson(body) : body;
-  return request;
+function defaultRequestTransformer(data) {
+  return isObject(data) && !isFile(data) && !isBlob(data) && !isFormData(data) ? toJson(data) : data;
 }
 
 // deserialize response when response content-type was application/json
-function defaultResponseTransformer(response) {
+function defaultResponseTransformer(response, headersGetter) {
 
-  if (response instanceof Response) {
+  let contentType = headersGetter('Content-Type');
 
-    let contentType = response.headers.get('Content-Type');
-
-    if (contentType && (contentType.indexOf(APPLICATION_JSON) === 0)) {
-      return response.json();
+  if (contentType) {
+    if (contentType.indexOf(APPLICATION_JSON) === 0) {
+      response.data = response.json();
+    } else {
+      response.data = response.text();
     }
-
-  } else {
-    return response;
   }
 
+  return response;
 }
 
-function executeRequestTransformers(request) {
-
-  let fns = request.requestTransformers;
+// execute request|response transformers
+function executeHttpTransformers(data, headersGetter, status, fns) {
 
   if (isFunction(fns)) {
-    body = fns(body, headers, status);
+    data = fns(data, headersGetter, status);
   } else {
     fns.forEach(fn => {
-      body = fn(body, headers, status);
+      data = fn(data, headersGetter, status);
     });
   }
 
-  return body;
-
+  return data;
 }
 
+function combineResponseWithRequest(request, response) {
+
+  Object.keys(request).forEach(prop => {
+
+    let value = request[prop];
+    // the prop which response not exist and it is not a function will be combine
+    if (!isFunction(value) && !(prop in response)) {
+      response[prop] = value;
+    }
+
+  });
+
+  return response;
+}
+
+/**
+ * process response entity then execute response transformers
+ * @param request request configs
+ * @param response response configs
+ * @returns Promise
+ */
 function transformResponse(request, response) {
 
-  if (response instanceof Response) {
-    return Promise[response.ok ? 'resolve' : 'reject']({request, response});
+  if (response instanceof Error) {
+    throw new TypeError('Response type error when transforming');
   } else {
-    return Promise.reject(new TypeError('Network request failed'));
+    response = combineResponseWithRequest(request, response);
+    response = executeHttpTransformers(response, getHeadersGetter(response.headers), response.status, response.responseTransformers);
+    return Promise[response.ok ? 'resolve' : 'reject'](response);
   }
 
 }
@@ -110,11 +134,9 @@ FetchHttp.defaultConfigs = {
 
   headers    : {
     'Content-Type'    : `${APPLICATION_JSON};charset=utf-8`,
-    'Cache-Control'   : 'no-cache',
     'X-Requested-With': 'https://github.com/kuitos/'
   },
-  mode       : 'same-origin',
-  credentials: 'same-origin',
+  credentials: 'omit',
   cache      : 'no-cache',
 
   interceptors        : [],
@@ -126,43 +148,50 @@ FetchHttp.defaultConfigs = {
 /**
  * @param url
  * @param method
- * @param request:
+ * @param configs:
  *           params: url query params
- *           body: request payload.
+ *           data: request payload.
+ *           headers: customer headers
  * Other configs see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch
  * @returns {*|Promise.<response>}
  * @constructor
  */
-function FetchHttp(url, method, request) {
+function FetchHttp(url, method, configs) {
 
   if (!urlIsSameOrigin(url)) {
-    request.mode = 'cors';
-    request.credentials = 'include';
+    configs.mode = 'cors';
   }
 
   // merge headers
-  request.headers = Object.assign({}, FetchHttp.defaultConfigs.headers, request.headers);
+  configs.headers = Object.assign({}, FetchHttp.defaultConfigs.headers, configs.headers);
+  // copy interceptors from default configs
+  configs.interceptors = Array.from(FetchHttp.defaultConfigs.interceptors);
 
   // merge method/url and other configs
-  request = Object.assign({url}, FetchHttp.defaultConfigs, request, {method: method.toUpperCase()});
+  configs = Object.assign({url}, FetchHttp.defaultConfigs, configs, {method: method.toUpperCase()});
 
   // build url
-  if (request.params) {
-    url = buildUrl(url, request.params);
+  if (configs.params) {
+    url = buildUrl(url, configs.params);
   }
 
-  let serverRequest = request => {
+  let serverRequest = requestConfigs => {
 
-    let handleResponse = response => {
-      return transformResponse(request, response);
-    };
+    // execute response transformers
+    let processResponse = response => transformResponse(requestConfigs, response);
 
-    return fetch(url, Object.assign({body: executeRequestTransformers(request)}, request))
-      .then(handleResponse, handleResponse);
+    // execute transformers
+    let bodyAfterTransform = executeHttpTransformers(requestConfigs.data, getHeadersGetter(requestConfigs.headers), undefined, requestConfigs.requestTransformers);
+    let configsAfterTransform = Object.assign({body: bodyAfterTransform}, requestConfigs);
+
+    return fetch(url, configsAfterTransform).then(processResponse, processResponse);
   };
 
+  // build the request execute chain
   let chain = [serverRequest, undefined];
-  let interceptors = request.interceptors;
+
+  // add interceptors into execute chain which will around the server request
+  let interceptors = configs.interceptors;
   while (interceptors.length) {
 
     // The reversal is needed so that we can build up the interception chain around the server request.
@@ -177,7 +206,8 @@ function FetchHttp(url, method, request) {
     }
   }
 
-  let promise = Promise.resolve(request);
+  // execute chain which include interceptors,serverRequest and transformers
+  let promise = Promise.resolve(configs);
   while (chain.length) {
 
     let resolveFn = chain.shift();
@@ -186,7 +216,10 @@ function FetchHttp(url, method, request) {
     promise = promise.then(resolveFn, rejectFn);
   }
 
-  return promise.then(defaultResponseTransformer, defaultResponseTransformer);
+  // resolve response data entity to caller
+  return promise.then(response => response.data, response => {
+    Promise.reject(response);
+  });
 }
 
 /**
@@ -196,9 +229,9 @@ function FetchHttp(url, method, request) {
 
   names.forEach(name => {
 
-    FetchHttp[name] = (url, params, request = {}) => {
-      request.params = params;
-      return FetchHttp(url, name, request);
+    FetchHttp[name.toLowerCase()] = (url, params, configs = {}) => {
+      configs.params = params;
+      return FetchHttp(url, name, configs);
     }
   });
 
@@ -208,9 +241,9 @@ function FetchHttp(url, method, request) {
 
   names.forEach(name => {
 
-    FetchHttp[name] = (url, payload, request = {}) => {
-      request.body = payload;
-      return FetchHttp(url, REQUEST_METHODS.POST, request);
+    FetchHttp[name.toLowerCase()] = (url, payload, configs = {}) => {
+      configs.data = payload;
+      return FetchHttp(url, REQUEST_METHODS.POST, configs);
     }
   });
 
