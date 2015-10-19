@@ -4,7 +4,7 @@
  * @since 2015-10-19
  */
 
-import FetchHttp from '../src/http/fetch-http.js';
+import FetchHttp from '../src/core/fetch-http.js';
 
 FetchHttp.defaultConfigs.requestTransformers.push((data, headersGetter, status) => {
 

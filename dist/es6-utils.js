@@ -64,16 +64,16 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _httpFetchHttpJs = __webpack_require__(2);
+	var _coreFetchHttpJs = __webpack_require__(2);
 	
-	var _httpFetchHttpJs2 = _interopRequireDefault(_httpFetchHttpJs);
+	var _coreFetchHttpJs2 = _interopRequireDefault(_coreFetchHttpJs);
 	
-	var _httpFetchHttpResourceJs = __webpack_require__(7);
+	var _coreFetchHttpResourceJs = __webpack_require__(7);
 	
-	var _httpFetchHttpResourceJs2 = _interopRequireDefault(_httpFetchHttpResourceJs);
+	var _coreFetchHttpResourceJs2 = _interopRequireDefault(_coreFetchHttpResourceJs);
 	
-	exports.FetchHttp = _httpFetchHttpJs2['default'];
-	exports.FetchHttpResource = _httpFetchHttpResourceJs2['default'];
+	exports.FetchHttp = _coreFetchHttpJs2['default'];
+	exports.FetchHttpResource = _coreFetchHttpResourceJs2['default'];
 
 /***/ },
 /* 2 */
@@ -218,24 +218,6 @@
 	}
 	
 	/**
-	 * FetchHttp configuration
-	 */
-	FetchHttp.defaultConfigs = {
-	
-	  headers: {
-	    'Content-Type': _constantsHttpConstantsJs.APPLICATION_JSON + ';charset=utf-8',
-	    'X-Requested-With': 'https://github.com/kuitos/'
-	  },
-	  credentials: 'omit',
-	  cache: 'no-cache',
-	
-	  interceptors: [],
-	  requestTransformers: [defaultRequestTransformer],
-	  responseTransformers: [defaultResponseTransformer]
-	
-	};
-	
-	/**
 	 * @param url
 	 * @param method
 	 * @param configs:
@@ -344,6 +326,24 @@
 	    };
 	  });
 	})([_constantsHttpConstantsJs.REQUEST_METHODS.POST, _constantsHttpConstantsJs.REQUEST_METHODS.PUT, _constantsHttpConstantsJs.REQUEST_METHODS.PATCH]);
+	
+	/**
+	 * FetchHttp configuration
+	 */
+	FetchHttp.defaultConfigs = {
+	
+	  headers: {
+	    'Content-Type': _constantsHttpConstantsJs.APPLICATION_JSON + ';charset=utf-8',
+	    'X-Requested-With': 'https://github.com/kuitos/'
+	  },
+	  credentials: 'omit',
+	  cache: 'no-cache',
+	
+	  interceptors: [],
+	  requestTransformers: [defaultRequestTransformer],
+	  responseTransformers: [defaultResponseTransformer]
+	
+	};
 	
 	exports['default'] = FetchHttp;
 	module.exports = exports['default'];

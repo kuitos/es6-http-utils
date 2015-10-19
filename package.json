@@ -1,6 +1,6 @@
 {
   "name": "web-fetch-request",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "a web request module build with fetch api & es6,without any other dependencies",
   "main": "lib/index.js",
   "scripts": {

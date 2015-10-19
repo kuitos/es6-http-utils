@@ -5,28 +5,15 @@
  * Fetch request api.Inspired by angular $http
  */
 
-'use strict';
+import unused from 'whatwg-fetch';
+import {REQUEST_METHODS, APPLICATION_JSON} from '../constants/http-constants.js';
+import {isString, isFunction, isObject, isDate, isFile, isBlob, isFormData, toJson} from '../utils/base-util.js';
+import {urlIsSameOrigin, encodeUriQuery} from '../utils/web-util.js';
 
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _whatwgFetch = require('whatwg-fetch');
-
-var _whatwgFetch2 = _interopRequireDefault(_whatwgFetch);
-
-var _constantsHttpConstantsJs = require('../constants/http-constants.js');
-
-var _utilsBaseUtilJs = require('../utils/base-util.js');
-
-var _utilsWebUtilJs = require('../utils/web-util.js');
-
-var fetch = window.fetch;
-var Request = window.Request;
-var Response = window.Response;
-var Headers = window.Headers;
+const fetch = window.fetch;
+const Request = window.Request;
+const Response = window.Response;
+const Headers = window.Headers;
 
 function getHeadersGetter(headers) {
   headers = new Headers(headers);
@@ -35,16 +22,16 @@ function getHeadersGetter(headers) {
 
 // serialize to json string when payload was an object
 function defaultRequestTransformer(data) {
-  return (0, _utilsBaseUtilJs.isObject)(data) && !(0, _utilsBaseUtilJs.isFile)(data) && !(0, _utilsBaseUtilJs.isBlob)(data) && !(0, _utilsBaseUtilJs.isFormData)(data) ? (0, _utilsBaseUtilJs.toJson)(data) : data;
+  return isObject(data) && !isFile(data) && !isBlob(data) && !isFormData(data) ? toJson(data) : data;
 }
 
 // deserialize response when response content-type was application/json
 function defaultResponseTransformer(response, headersGetter) {
 
-  var contentType = headersGetter('Content-Type');
+  let contentType = headersGetter('Content-Type');
 
   if (contentType) {
-    if (contentType.indexOf(_constantsHttpConstantsJs.APPLICATION_JSON) === 0) {
+    if (contentType.indexOf(APPLICATION_JSON) === 0) {
       response.data = response.json();
     } else {
       response.data = response.text();
@@ -57,10 +44,10 @@ function defaultResponseTransformer(response, headersGetter) {
 // execute request|response transformers
 function executeHttpTransformers(data, headersGetter, status, fns) {
 
-  if ((0, _utilsBaseUtilJs.isFunction)(fns)) {
+  if (isFunction(fns)) {
     data = fns(data, headersGetter, status);
   } else {
-    fns.forEach(function (fn) {
+    fns.forEach(fn => {
       data = fn(data, headersGetter, status);
     });
   }
@@ -70,13 +57,14 @@ function executeHttpTransformers(data, headersGetter, status, fns) {
 
 function combineResponseWithRequest(request, response) {
 
-  Object.keys(request).forEach(function (prop) {
+  Object.keys(request).forEach(prop => {
 
-    var value = request[prop];
+    let value = request[prop];
     // the prop which response not exist and it is not a function will be combine
-    if (!(0, _utilsBaseUtilJs.isFunction)(value) && !(prop in response)) {
+    if (!isFunction(value) && !(prop in response)) {
       response[prop] = value;
     }
+
   });
 
   return response;
@@ -97,62 +85,47 @@ function transformResponse(request, response) {
     response = executeHttpTransformers(response, getHeadersGetter(response.headers), response.status, response.responseTransformers);
     return Promise[response.ok ? 'resolve' : 'reject'](response);
   }
+
 }
 
 function buildUrl(url, params) {
 
-  var queryParams = [];
-  var builtUrl = url;
+  let queryParams = [];
+  let builtUrl = url;
 
   if (params) {
 
-    Object.keys(params).sort().forEach(function (key) {
+    Object.keys(params).sort().forEach(key => {
 
-      var value = params[key];
+      let value = params[key];
 
       // not undefined or null
       if (value != undefined) {
 
-        if ((0, _utilsBaseUtilJs.isObject)(value)) {
-          if ((0, _utilsBaseUtilJs.isDate)(value)) {
+        if (isObject(value)) {
+          if (isDate(value)) {
             value = value.toISOString();
           } else if (Array.isArray(value)) {
             // according to rest specification array should be separated by comma in url
             value = value.join(',');
           } else {
-            value = (0, _utilsBaseUtilJs.toJson)(value);
+            value = toJson(value);
           }
         }
 
-        queryParams.push((0, _utilsWebUtilJs.encodeUriQuery)(key) + '=' + (0, _utilsWebUtilJs.encodeUriQuery)(value));
+        queryParams.push(`${encodeUriQuery(key)}=${encodeUriQuery(value)}`);
       }
+
     });
 
     if (queryParams.length) {
-      builtUrl = '' + url + (url.indexOf('?') === -1 ? '?' : '&') + queryParams.join('&');
+      builtUrl = `${url}${url.indexOf('?') === -1 ? '?' : '&'}${queryParams.join('&')}`;
     }
+
   }
 
   return builtUrl;
 }
-
-/**
- * FetchHttp configuration
- */
-FetchHttp.defaultConfigs = {
-
-  headers: {
-    'Content-Type': _constantsHttpConstantsJs.APPLICATION_JSON + ';charset=utf-8',
-    'X-Requested-With': 'https://github.com/kuitos/'
-  },
-  credentials: 'omit',
-  cache: 'no-cache',
-
-  interceptors: [],
-  requestTransformers: [defaultRequestTransformer],
-  responseTransformers: [defaultResponseTransformer]
-
-};
 
 /**
  * @param url
@@ -167,7 +140,7 @@ FetchHttp.defaultConfigs = {
  */
 function FetchHttp(url, method, configs) {
 
-  if (!(0, _utilsWebUtilJs.urlIsSameOrigin)(url)) {
+  if (!urlIsSameOrigin(url)) {
     configs.mode = 'cors';
   }
 
@@ -177,36 +150,34 @@ function FetchHttp(url, method, configs) {
   configs.interceptors = Array.from(FetchHttp.defaultConfigs.interceptors);
 
   // merge method/url and other configs
-  configs = Object.assign({ url: url }, FetchHttp.defaultConfigs, configs, { method: method.toUpperCase() });
+  configs = Object.assign({url}, FetchHttp.defaultConfigs, configs, {method: method.toUpperCase()});
 
   // build url
   if (configs.params) {
     url = buildUrl(url, configs.params);
   }
 
-  var serverRequest = function serverRequest(requestConfigs) {
+  let serverRequest = requestConfigs => {
 
     // execute response transformers
-    var processResponse = function processResponse(response) {
-      return transformResponse(requestConfigs, response);
-    };
+    let processResponse = response => transformResponse(requestConfigs, response);
 
     // execute transformers
-    var bodyAfterTransform = executeHttpTransformers(requestConfigs.data, getHeadersGetter(requestConfigs.headers), undefined, requestConfigs.requestTransformers);
-    var configsAfterTransform = Object.assign({ body: bodyAfterTransform }, requestConfigs);
+    let bodyAfterTransform = executeHttpTransformers(requestConfigs.data, getHeadersGetter(requestConfigs.headers), undefined, requestConfigs.requestTransformers);
+    let configsAfterTransform = Object.assign({body: bodyAfterTransform}, requestConfigs);
 
     return fetch(url, configsAfterTransform).then(processResponse, processResponse);
   };
 
   // build the request execute chain
-  var chain = [serverRequest, undefined];
+  let chain = [serverRequest, undefined];
 
   // add interceptors into execute chain which will around the server request
-  var interceptors = configs.interceptors;
+  let interceptors = configs.interceptors;
   while (interceptors.length) {
 
     // The reversal is needed so that we can build up the interception chain around the server request.
-    var interceptor = interceptors.pop();
+    let interceptor = interceptors.pop();
 
     if (interceptor.request || interceptor.requestError) {
       chain.unshift(interceptor.request, interceptor.requestError);
@@ -218,19 +189,17 @@ function FetchHttp(url, method, configs) {
   }
 
   // execute chain which include interceptors,serverRequest and transformers
-  var promise = Promise.resolve(configs);
+  let promise = Promise.resolve(configs);
   while (chain.length) {
 
-    var resolveFn = chain.shift();
-    var rejectFn = chain.shift();
+    let resolveFn = chain.shift();
+    let rejectFn = chain.shift();
 
     promise = promise.then(resolveFn, rejectFn);
   }
 
   // resolve response data entity to caller
-  return promise.then(function (response) {
-    return response.data;
-  }, function (response) {
+  return promise.then(response => response.data, response => {
     Promise.reject(response);
   });
 }
@@ -240,29 +209,44 @@ function FetchHttp(url, method, configs) {
  */
 (function createShortMethods(names) {
 
-  names.forEach(function (name) {
+  names.forEach(name => {
 
-    FetchHttp[name.toLowerCase()] = function (url, params) {
-      var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
+    FetchHttp[name.toLowerCase()] = (url, params, configs = {}) => {
       configs.params = params;
       return FetchHttp(url, name, configs);
-    };
+    }
   });
-})([_constantsHttpConstantsJs.REQUEST_METHODS.GET, _constantsHttpConstantsJs.REQUEST_METHODS.DELETE, _constantsHttpConstantsJs.REQUEST_METHODS.HEAD]);
+
+})([REQUEST_METHODS.GET, REQUEST_METHODS.DELETE, REQUEST_METHODS.HEAD]);
 
 (function createShortMethodsWithPayload(names) {
 
-  names.forEach(function (name) {
+  names.forEach(name => {
 
-    FetchHttp[name.toLowerCase()] = function (url, payload) {
-      var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
+    FetchHttp[name.toLowerCase()] = (url, payload, configs = {}) => {
       configs.data = payload;
-      return FetchHttp(url, _constantsHttpConstantsJs.REQUEST_METHODS.POST, configs);
-    };
+      return FetchHttp(url, REQUEST_METHODS.POST, configs);
+    }
   });
-})([_constantsHttpConstantsJs.REQUEST_METHODS.POST, _constantsHttpConstantsJs.REQUEST_METHODS.PUT, _constantsHttpConstantsJs.REQUEST_METHODS.PATCH]);
 
-exports['default'] = FetchHttp;
-module.exports = exports['default'];
+})([REQUEST_METHODS.POST, REQUEST_METHODS.PUT, REQUEST_METHODS.PATCH]);
+
+/**
+ * FetchHttp configuration
+ */
+FetchHttp.defaultConfigs = {
+
+  headers    : {
+    'Content-Type'    : `${APPLICATION_JSON};charset=utf-8`,
+    'X-Requested-With': 'https://github.com/kuitos/'
+  },
+  credentials: 'omit',
+  cache      : 'no-cache',
+
+  interceptors        : [],
+  requestTransformers : [defaultRequestTransformer],
+  responseTransformers: [defaultResponseTransformer]
+
+};
+
+export default FetchHttp;
