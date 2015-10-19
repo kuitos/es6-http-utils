@@ -1,8 +1,5 @@
 {
   "parser": "babel-eslint",
-  "plugins": [
-    "react"
-  ],
   "env": {
     "browser": true,
     "node": true,
@@ -25,6 +22,8 @@
     "jsx-quotes": [2, "prefer-double"],
     "object-shorthand": [2, "always"],
     "arrow-parens": [2, "as-needed"],
-    "no-var": [2]
+    "no-var": [
+      2
+    ]
   }
 }

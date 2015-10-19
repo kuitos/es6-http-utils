@@ -30,19 +30,19 @@ module.exports = {
   module : {
     preLoaders: [
       {
-        test   : /\.js?$/,
+        test   : /\.js$/,
         loader : 'eslint-loader',
-        exclude: /(node_modules|src\/app\/containers)/,
+        exclude: /node_modules/,
         include: path.join(__dirname, 'src')
       }
     ],
 
     loaders: [
       {
-        test   : /\.js?$/,
+        test   : /\.js$/,
         loaders: ['babel'],
         exclude: /(node_modules|bower_components)/,
-        include: [path.join(__dirname, 'src'), path.join(__dirname, 'test')]
+        include: path.join(__dirname, 'src')
       }
     ]
   }

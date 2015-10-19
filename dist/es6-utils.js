@@ -64,16 +64,16 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _requestFetchRequestJs = __webpack_require__(2);
+	var _httpFetchHttpJs = __webpack_require__(2);
 	
-	var _requestFetchRequestJs2 = _interopRequireDefault(_requestFetchRequestJs);
+	var _httpFetchHttpJs2 = _interopRequireDefault(_httpFetchHttpJs);
 	
-	var _requestFetchRequestResourceJs = __webpack_require__(7);
+	var _httpFetchHttpResourceJs = __webpack_require__(7);
 	
-	var _requestFetchRequestResourceJs2 = _interopRequireDefault(_requestFetchRequestResourceJs);
+	var _httpFetchHttpResourceJs2 = _interopRequireDefault(_httpFetchHttpResourceJs);
 	
-	exports.FetchRequest = _requestFetchRequestJs2['default'];
-	exports.FetcHttpResource = _requestFetchRequestResourceJs2['default'];
+	exports.FetchHttp = _httpFetchHttpJs2['default'];
+	exports.FetchHttpResource = _httpFetchHttpResourceJs2['default'];
 
 /***/ },
 /* 2 */
@@ -107,28 +107,83 @@
 	var fetch = window.fetch;
 	var Request = window.Request;
 	var Response = window.Response;
+	var Headers = window.Headers;
+	
+	function getHeadersGetter(headers) {
+	  headers = new Headers(headers);
+	  return headers.get.bind(headers);
+	}
 	
 	// serialize to json string when payload was an object
-	function transformRequest(payload) {
-	  return (0, _utilsBaseUtilJs.isObject)(payload) && !(0, _utilsBaseUtilJs.isFile)(payload) && !(0, _utilsBaseUtilJs.isBlob)(payload) && !(0, _utilsBaseUtilJs.isFormData)(payload) ? (0, _utilsBaseUtilJs.toJson)(payload) : payload;
+	function defaultRequestTransformer(data) {
+	  return (0, _utilsBaseUtilJs.isObject)(data) && !(0, _utilsBaseUtilJs.isFile)(data) && !(0, _utilsBaseUtilJs.isBlob)(data) && !(0, _utilsBaseUtilJs.isFormData)(data) ? (0, _utilsBaseUtilJs.toJson)(data) : data;
 	}
 	
 	// deserialize response when response content-type was application/json
-	function transformResponse(response) {
+	function defaultResponseTransformer(response, headersGetter) {
 	
-	  var contentType = response.headers.get('Content-Type');
+	  var contentType = headersGetter('Content-Type');
 	
-	  if (contentType && contentType.indexOf(_constantsHttpConstantsJs.APPLICATION_JSON) === 0) {
-	    return response.json();
+	  if (contentType) {
+	    if (contentType.indexOf(_constantsHttpConstantsJs.APPLICATION_JSON) === 0) {
+	      response.data = response.json();
+	    } else {
+	      response.data = response.text();
+	    }
+	  }
+	
+	  return response;
+	}
+	
+	// execute request|response transformers
+	function executeHttpTransformers(data, headersGetter, status, fns) {
+	
+	  if ((0, _utilsBaseUtilJs.isFunction)(fns)) {
+	    data = fns(data, headersGetter, status);
 	  } else {
-	    return response;
+	    fns.forEach(function (fn) {
+	      data = fn(data, headersGetter, status);
+	    });
+	  }
+	
+	  return data;
+	}
+	
+	function combineResponseWithRequest(request, response) {
+	
+	  Object.keys(request).forEach(function (prop) {
+	
+	    var value = request[prop];
+	    // the prop which response not exist and it is not a function will be combine
+	    if (!(0, _utilsBaseUtilJs.isFunction)(value) && !(prop in response)) {
+	      response[prop] = value;
+	    }
+	  });
+	
+	  return response;
+	}
+	
+	/**
+	 * process response entity then execute response transformers
+	 * @param request request configs
+	 * @param response response configs
+	 * @returns Promise
+	 */
+	function transformResponse(request, response) {
+	
+	  if (response instanceof Error) {
+	    throw new TypeError('Response type error when transforming');
+	  } else {
+	    response = combineResponseWithRequest(request, response);
+	    response = executeHttpTransformers(response, getHeadersGetter(response.headers), response.status, response.responseTransformers);
+	    return Promise[response.ok ? 'resolve' : 'reject'](response);
 	  }
 	}
 	
 	function buildUrl(url, params) {
 	
-	  var queryParams = [],
-	      builtUrl = url;
+	  var queryParams = [];
+	  var builtUrl = url;
 	
 	  if (params) {
 	
@@ -162,96 +217,135 @@
 	  return builtUrl;
 	}
 	
-	// fetch api common config
-	var COMMON_CONFIG = {
-	  headers: { 'Content-Type': _constantsHttpConstantsJs.APPLICATION_JSON + ';charset=utf-8', 'X-Requested-With': 'https://github.com/kuitos/' },
-	  mode: 'same-origin',
-	  credentials: 'same-origin',
-	  cache: 'no-cache'
-	};
+	/**
+	 * FetchHttp configuration
+	 */
+	FetchHttp.defaultConfigs = {
 	
-	var FetchRequestConfig = {
+	  headers: {
+	    'Content-Type': _constantsHttpConstantsJs.APPLICATION_JSON + ';charset=utf-8',
+	    'X-Requested-With': 'https://github.com/kuitos/'
+	  },
+	  credentials: 'omit',
+	  cache: 'no-cache',
 	
-	  interceptors: []
+	  interceptors: [],
+	  requestTransformers: [defaultRequestTransformer],
+	  responseTransformers: [defaultResponseTransformer]
 	
 	};
 	
 	/**
-	 *
 	 * @param url
 	 * @param method
 	 * @param configs:
 	 *           params: url query params
 	 *           data: request payload.
+	 *           headers: customer headers
 	 * Other configs see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch
 	 * @returns {*|Promise.<response>}
 	 * @constructor
 	 */
-	function FetchRequest(url, method, configs) {
+	function FetchHttp(url, method, configs) {
 	
 	  if (!(0, _utilsWebUtilJs.urlIsSameOrigin)(url)) {
 	    configs.mode = 'cors';
 	  }
 	
 	  // merge headers
-	  configs.headers = Object.assign({}, COMMON_CONFIG.headers, configs.headers);
+	  configs.headers = Object.assign({}, FetchHttp.defaultConfigs.headers, configs.headers);
+	  // copy interceptors from default configs
+	  configs.interceptors = Array.from(FetchHttp.defaultConfigs.interceptors);
+	
+	  // merge method/url and other configs
+	  configs = Object.assign({ url: url }, FetchHttp.defaultConfigs, configs, { method: method.toUpperCase() });
 	
 	  // build url
 	  if (configs.params) {
 	    url = buildUrl(url, configs.params);
 	  }
 	
-	  var init = Object.assign({ body: transformRequest(configs.data) }, COMMON_CONFIG, configs, { method: method });
+	  var serverRequest = function serverRequest(requestConfigs) {
 	
-	  var request = new Request(url, init);
+	    // execute response transformers
+	    var processResponse = function processResponse(response) {
+	      return transformResponse(requestConfigs, response);
+	    };
 	
-	  var serverRequest = function serverRequest(request) {
-	    return fetch(request).then(transformResponse, transformResponse);
+	    // execute transformers
+	    var bodyAfterTransform = executeHttpTransformers(requestConfigs.data, getHeadersGetter(requestConfigs.headers), undefined, requestConfigs.requestTransformers);
+	    var configsAfterTransform = Object.assign({ body: bodyAfterTransform }, requestConfigs);
+	
+	    return fetch(url, configsAfterTransform).then(processResponse, processResponse);
 	  };
 	
+	  // build the request execute chain
 	  var chain = [serverRequest, undefined];
-	  var interceptors = FetchRequestConfig.interceptors;
 	
-	  while (interceptors.length--) {
-	    var a = 10;
+	  // add interceptors into execute chain which will around the server request
+	  var interceptors = configs.interceptors;
+	  while (interceptors.length) {
+	
+	    // The reversal is needed so that we can build up the interception chain around the server request.
+	    var interceptor = interceptors.pop();
+	
+	    if (interceptor.request || interceptor.requestError) {
+	      chain.unshift(interceptor.request, interceptor.requestError);
+	    }
+	
+	    if (interceptor.response || interceptor.responseError) {
+	      chain.push(interceptor.response, interceptor.responseError);
+	    }
 	  }
+	
+	  // execute chain which include interceptors,serverRequest and transformers
+	  var promise = Promise.resolve(configs);
+	  while (chain.length) {
+	
+	    var resolveFn = chain.shift();
+	    var rejectFn = chain.shift();
+	
+	    promise = promise.then(resolveFn, rejectFn);
+	  }
+	
+	  // resolve response data entity to caller
+	  return promise.then(function (response) {
+	    return response.data;
+	  }, function (response) {
+	    Promise.reject(response);
+	  });
 	}
 	
-	FetchRequest.get = function (url, params) {
-	  var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+	/**
+	 * FetchHttp short methods
+	 */
+	(function createShortMethods(names) {
 	
-	  configs.params = params;
-	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.GET, configs);
-	};
+	  names.forEach(function (name) {
 	
-	FetchRequest.post = function (url, payload) {
-	  var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+	    FetchHttp[name.toLowerCase()] = function (url, params) {
+	      var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	
-	  configs.data = payload;
-	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.POST, configs);
-	};
+	      configs.params = params;
+	      return FetchHttp(url, name, configs);
+	    };
+	  });
+	})([_constantsHttpConstantsJs.REQUEST_METHODS.GET, _constantsHttpConstantsJs.REQUEST_METHODS.DELETE, _constantsHttpConstantsJs.REQUEST_METHODS.HEAD]);
 	
-	FetchRequest.put = function (url, payload) {
-	  var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+	(function createShortMethodsWithPayload(names) {
 	
-	  configs.data = payload;
-	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.PUT, configs);
-	};
+	  names.forEach(function (name) {
 	
-	FetchRequest.patch = function (url, payload) {
-	  var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+	    FetchHttp[name.toLowerCase()] = function (url, payload) {
+	      var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	
-	  configs.data = payload;
-	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.PATCH, configs);
-	};
+	      configs.data = payload;
+	      return FetchHttp(url, _constantsHttpConstantsJs.REQUEST_METHODS.POST, configs);
+	    };
+	  });
+	})([_constantsHttpConstantsJs.REQUEST_METHODS.POST, _constantsHttpConstantsJs.REQUEST_METHODS.PUT, _constantsHttpConstantsJs.REQUEST_METHODS.PATCH]);
 	
-	FetchRequest['delete'] = function (url) {
-	  var configs = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-	
-	  return FetchRequest(url, _constantsHttpConstantsJs.REQUEST_METHODS.DELETE, configs);
-	};
-	
-	exports['default'] = FetchRequest;
+	exports['default'] = FetchHttp;
 	module.exports = exports['default'];
 
 /***/ },
@@ -267,7 +361,7 @@
 	
 	  function normalizeName(name) {
 	    if (typeof name !== 'string') {
-	      name = name.toString();
+	      name = String(name)
 	    }
 	    if (/[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
 	      throw new TypeError('Invalid character in header field name')
@@ -277,7 +371,7 @@
 	
 	  function normalizeValue(value) {
 	    if (typeof value !== 'string') {
-	      value = value.toString();
+	      value = String(value)
 	    }
 	    return value
 	  }
@@ -460,20 +554,44 @@
 	    return (methods.indexOf(upcased) > -1) ? upcased : method
 	  }
 	
-	  function Request(url, options) {
+	  function Request(input, options) {
 	    options = options || {}
-	    this.url = url
+	    var body = options.body
+	    if (Request.prototype.isPrototypeOf(input)) {
+	      if (input.bodyUsed) {
+	        throw new TypeError('Already read')
+	      }
+	      this.url = input.url
+	      this.credentials = input.credentials
+	      if (!options.headers) {
+	        this.headers = new Headers(input.headers)
+	      }
+	      this.method = input.method
+	      this.mode = input.mode
+	      if (!body) {
+	        body = input._bodyInit
+	        input.bodyUsed = true
+	      }
+	    } else {
+	      this.url = input
+	    }
 	
-	    this.credentials = options.credentials || 'omit'
-	    this.headers = new Headers(options.headers)
-	    this.method = normalizeMethod(options.method || 'GET')
-	    this.mode = options.mode || null
+	    this.credentials = options.credentials || this.credentials || 'omit'
+	    if (options.headers || !this.headers) {
+	      this.headers = new Headers(options.headers)
+	    }
+	    this.method = normalizeMethod(options.method || this.method || 'GET')
+	    this.mode = options.mode || this.mode || null
 	    this.referrer = null
 	
-	    if ((this.method === 'GET' || this.method === 'HEAD') && options.body) {
+	    if ((this.method === 'GET' || this.method === 'HEAD') && body) {
 	      throw new TypeError('Body not allowed for GET or HEAD requests')
 	    }
-	    this._initBody(options.body)
+	    this._initBody(body)
+	  }
+	
+	  Request.prototype.clone = function() {
+	    return new Request(this)
 	  }
 	
 	  function decode(body) {
@@ -510,7 +628,6 @@
 	
 	    this._initBody(bodyInit)
 	    this.type = 'default'
-	    this.url = null
 	    this.status = options.status
 	    this.ok = this.status >= 200 && this.status < 300
 	    this.statusText = options.statusText
@@ -520,20 +637,44 @@
 	
 	  Body.call(Response.prototype)
 	
+	  Response.prototype.clone = function() {
+	    return new Response(this._bodyInit, {
+	      status: this.status,
+	      statusText: this.statusText,
+	      headers: new Headers(this.headers),
+	      url: this.url
+	    })
+	  }
+	
+	  Response.error = function() {
+	    var response = new Response(null, {status: 0, statusText: ''})
+	    response.type = 'error'
+	    return response
+	  }
+	
+	  var redirectStatuses = [301, 302, 303, 307, 308]
+	
+	  Response.redirect = function(url, status) {
+	    if (redirectStatuses.indexOf(status) === -1) {
+	      throw new RangeError('Invalid status code')
+	    }
+	
+	    return new Response(null, {status: status, headers: {location: url}})
+	  }
+	
 	  self.Headers = Headers;
 	  self.Request = Request;
 	  self.Response = Response;
 	
 	  self.fetch = function(input, init) {
-	    // TODO: Request constructor should accept input, init
-	    var request
-	    if (Request.prototype.isPrototypeOf(input) && !init) {
-	      request = input
-	    } else {
-	      request = new Request(input, init)
-	    }
-	
 	    return new Promise(function(resolve, reject) {
+	      var request
+	      if (Request.prototype.isPrototypeOf(input) && !init) {
+	        request = input
+	      } else {
+	        request = new Request(input, init)
+	      }
+	
 	      var xhr = new XMLHttpRequest()
 	
 	      function responseURL() {
@@ -612,7 +753,8 @@
 	  POST: 'POST',
 	  PUT: 'PUT',
 	  PATCH: 'PATCH',
-	  DELETE: 'DELETE'
+	  DELETE: 'DELETE',
+	  HEAD: 'HEAD'
 	};
 	
 	exports.REQUEST_METHODS = REQUEST_METHODS;
@@ -636,6 +778,7 @@
 	});
 	exports.isString = isString;
 	exports.isObject = isObject;
+	exports.isFunction = isFunction;
 	exports.isDate = isDate;
 	exports.isFile = isFile;
 	exports.isBlob = isBlob;
@@ -651,8 +794,12 @@
 	  return value !== null && typeof value === 'object';
 	}
 	
+	function isFunction(fn) {
+	  return typeof fn === 'function';
+	}
+	
 	function isDate(date) {
-	  return toString.call(value) === '[object Date]';
+	  return toString.call(date) === '[object Date]';
 	}
 	
 	function isFile(obj) {
@@ -787,9 +934,9 @@
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 	
-	var _fetchRequestJs = __webpack_require__(2);
+	var _fetchHttpJs = __webpack_require__(2);
 	
-	var _fetchRequestJs2 = _interopRequireDefault(_fetchRequestJs);
+	var _fetchHttpJs2 = _interopRequireDefault(_fetchHttpJs);
 	
 	var _constantsHttpConstantsJs = __webpack_require__(4);
 	
@@ -830,7 +977,7 @@
 	  return restParams;
 	}
 	
-	var FetchRequestResource =
+	var FetchHttpResource =
 	
 	/**
 	 * Resource Constructor
@@ -840,16 +987,16 @@
 	 *          {get:{method:...,headers:....}} see fetch api config
 	 * @returns {} resource instance
 	 */
-	function FetcHttpResource(urlTemplate, defaultParams) {
+	function FetchHttpResource(urlTemplate, defaultParams) {
 	  var actions = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	
-	  _classCallCheck(this, FetcHttpResource);
+	  _classCallCheck(this, FetchHttpResource);
 	
 	  var resource = {};
 	  // POST|PUT|PATCH can have request body according to rest specification
 	  var methodsCanHaveBody = [_constantsHttpConstantsJs.REQUEST_METHODS.POST, _constantsHttpConstantsJs.REQUEST_METHODS.PUT, _constantsHttpConstantsJs.REQUEST_METHODS.PATCH];
 	
-	  Object.keys(Object.assign(actions, FetcHttpResource.defaults.actions)).forEach(function (actionName) {
+	  Object.keys(Object.assign(actions, FetchHttpResource.defaults.actions)).forEach(function (actionName) {
 	
 	    /**
 	     * generate resource method
@@ -902,10 +1049,10 @@
 	
 	      configs.params = getRestParamsFromUrlTemplate(urlTemplate, extractParams);
 	
-	      return (0, _fetchRequestJs2['default'])(url, method, configs).then(function (response) {
+	      return (0, _fetchHttpJs2['default'])(url, method, configs).then(function (response) {
 	
 	        if (!!action.isArray !== Array.isArray(response)) {
-	          throw new Error(method + ' request to url:' + url + ' occurred an error in resource configuration for action ' + actionName + '.\n            Expected response to contain an ' + (action.isArray ? 'array' : 'object') + ' but got an ' + (Array.isArray(response) ? 'array' : 'object'));
+	          throw new Error(method + ' request to url:' + url + ' occurred an error in resource configuration for action ' + actionName + '.' + ('Expected response to contain an ' + (action.isArray ? 'array' : 'object') + ' but got an ' + (Array.isArray(response) ? 'array' : 'object')));
 	        }
 	
 	        return response;
@@ -919,7 +1066,7 @@
 	// resource defaults configurations
 	;
 	
-	FetcHttpResource.defaults = {
+	FetchHttpResource.defaults = {
 	
 	  actions: {
 	    'get': { method: _constantsHttpConstantsJs.REQUEST_METHODS.GET },
@@ -933,7 +1080,7 @@
 	
 	};
 	
-	exports['default'] = FetcHttpResource;
+	exports['default'] = FetchHttpResource;
 	module.exports = exports['default'];
 
 /***/ }
