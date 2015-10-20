@@ -11,8 +11,6 @@ import {isString, isFunction, isObject, isDate, isFile, isBlob, isFormData, toJs
 import {urlIsSameOrigin, encodeUriQuery} from '../utils/web-util.js';
 
 const fetch = window.fetch;
-const Request = window.Request;
-const Response = window.Response;
 const Headers = window.Headers;
 
 function getHeadersGetter(headers) {
