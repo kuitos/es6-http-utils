@@ -64,16 +64,16 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _coreFetchHttpJs = __webpack_require__(2);
+	var _httpFetchHttpJs = __webpack_require__(2);
 	
-	var _coreFetchHttpJs2 = _interopRequireDefault(_coreFetchHttpJs);
+	var _httpFetchHttpJs2 = _interopRequireDefault(_httpFetchHttpJs);
 	
-	var _coreFetchHttpResourceJs = __webpack_require__(7);
+	var _httpFetchHttpResourceJs = __webpack_require__(7);
 	
-	var _coreFetchHttpResourceJs2 = _interopRequireDefault(_coreFetchHttpResourceJs);
+	var _httpFetchHttpResourceJs2 = _interopRequireDefault(_httpFetchHttpResourceJs);
 	
-	exports.FetchHttp = _coreFetchHttpJs2['default'];
-	exports.FetchHttpResource = _coreFetchHttpResourceJs2['default'];
+	exports.FetchHttp = _httpFetchHttpJs2['default'];
+	exports.FetchHttpResource = _httpFetchHttpResourceJs2['default'];
 
 /***/ },
 /* 2 */
@@ -105,8 +105,6 @@
 	var _utilsWebUtilJs = __webpack_require__(6);
 	
 	var fetch = window.fetch;
-	var Request = window.Request;
-	var Response = window.Response;
 	var Headers = window.Headers;
 	
 	function getHeadersGetter(headers) {
