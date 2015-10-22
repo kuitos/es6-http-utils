@@ -33,7 +33,7 @@ function defaultResponseTransformer(response, headersGetter) {
 
     let isDataConsumed = response.hasOwnProperty('data');
 
-    // because the Response instance can only consume once,if the response had a data property,it means it had been consumed
+    // because of the Response instance can only consume once,if the response had a data property,it means it had been consumed
     // so we need to get from data property
     if (contentType.indexOf(APPLICATION_JSON) === 0) {
       response.data = isDataConsumed ? response.data : response.json();
