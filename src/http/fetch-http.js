@@ -9,6 +9,7 @@ import unused from 'whatwg-fetch';
 import {REQUEST_METHODS, APPLICATION_JSON} from '../constants/http-constants.js';
 import {isString, isFunction, isObject, isDate, isFile, isBlob, isFormData, toJson} from '../utils/base-util.js';
 import {urlIsSameOrigin, encodeUriQuery} from '../utils/web-util.js';
+import LRUCache from '../cache/lru-cache.js';
 
 const fetch = window.fetch;
 const Headers = window.Headers;
@@ -29,11 +30,18 @@ function defaultResponseTransformer(response, headersGetter) {
   let contentType = headersGetter('Content-Type');
 
   if (contentType) {
+
+    let isDataConsumed = 'data' in response;
+
+    // because the Response instance can only consume once,if the response had a data property,it means it had been consumed
+    // so we need to get from data property
     if (contentType.indexOf(APPLICATION_JSON) === 0) {
-      response.data = response.json();
+      response.data = isDataConsumed ? response.data : response.json();
     } else {
-      response.data = response.text();
+      response.data = isDataConsumed ? response.data : response.text();
     }
+    // todo handler more content type of data such as images/form we need to convert it to blob/formData
+
   }
 
   return response;
@@ -125,6 +133,33 @@ function buildUrl(url, params) {
   return builtUrl;
 }
 
+// default cache
+let defaultCacheStore = new LRUCache();
+
+function sendReq(url, requestConfigs) {
+
+  if (requestConfigs.cacheStore) {
+
+    let cacheStore = isObject(requestConfigs.cacheStore) ? requestConfigs.cacheStore : defaultCacheStore;
+    let cacheResp = cacheStore.get(url);
+
+    if (cacheResp) {
+      return Promise.resolve(cacheResp);
+    } else {
+
+      let promise = fetch(url, requestConfigs);
+
+      // we need to store a promise as cache to solve the several async request when they are the same url
+      cacheStore.set(url, promise);
+
+      return promise;
+    }
+
+  } else {
+    return fetch(url, requestConfigs);
+  }
+}
+
 /**
  * @param url
  * @param method
@@ -164,7 +199,7 @@ function FetchHttp(url, method, configs) {
     let bodyAfterTransform = executeHttpTransformers(requestConfigs.data, getHeadersGetter(requestConfigs.headers), undefined, requestConfigs.requestTransformers);
     let configsAfterTransform = Object.assign({body: bodyAfterTransform}, requestConfigs);
 
-    return fetch(url, configsAfterTransform).then(processResponse, processResponse);
+    return sendReq(url, configsAfterTransform).then(processResponse, processResponse);
   };
 
   // build the request execute chain
@@ -241,6 +276,7 @@ FetchHttp.defaultConfigs = {
   credentials: 'omit',
   cache      : 'no-cache',
 
+  cacheStore          : false,
   interceptors        : [],
   requestTransformers : [defaultRequestTransformer],
   responseTransformers: [defaultResponseTransformer]

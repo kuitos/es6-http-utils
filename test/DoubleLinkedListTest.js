@@ -16,5 +16,7 @@ dlList.insertEnd(3);
 dlList.insertEnd('end');
 dlList.insertAfter('end', 9);
 dlList.insertBefore('head', 10);
+dlList.remove(3);
+
 
 dlList.display();

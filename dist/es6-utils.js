@@ -68,11 +68,11 @@
 	
 	var _httpFetchHttpJs2 = _interopRequireDefault(_httpFetchHttpJs);
 	
-	var _httpFetchHttpResourceJs = __webpack_require__(7);
+	var _httpFetchHttpResourceJs = __webpack_require__(11);
 	
 	var _httpFetchHttpResourceJs2 = _interopRequireDefault(_httpFetchHttpResourceJs);
 	
-	var _cacheLruCacheJs = __webpack_require__(8);
+	var _cacheLruCacheJs = __webpack_require__(7);
 	
 	var _cacheLruCacheJs2 = _interopRequireDefault(_cacheLruCacheJs);
 	
@@ -108,6 +108,10 @@
 	
 	var _utilsWebUtilJs = __webpack_require__(6);
 	
+	var _cacheLruCacheJs = __webpack_require__(7);
+	
+	var _cacheLruCacheJs2 = _interopRequireDefault(_cacheLruCacheJs);
+	
 	var fetch = window.fetch;
 	var Headers = window.Headers;
 	
@@ -127,11 +131,17 @@
 	  var contentType = headersGetter('Content-Type');
 	
 	  if (contentType) {
+	
+	    var isDataConsumed = ('data' in response);
+	
+	    // because the Response instance can only consume once,if the response had a data property,it means it had been consumed
+	    // so we need to get from data property
 	    if (contentType.indexOf(_constantsHttpConstantsJs.APPLICATION_JSON) === 0) {
-	      response.data = response.json();
+	      response.data = isDataConsumed ? response.data : response.json();
 	    } else {
-	      response.data = response.text();
+	      response.data = isDataConsumed ? response.data : response.text();
 	    }
+	    // todo handler more content type of data such as images/form we need to convert it to blob/formData
 	  }
 	
 	  return response;
@@ -219,6 +229,32 @@
 	  return builtUrl;
 	}
 	
+	// default cache
+	var defaultCacheStore = new _cacheLruCacheJs2['default']();
+	
+	function sendReq(url, requestConfigs) {
+	
+	  if (requestConfigs.cacheStore) {
+	
+	    var cacheStore = (0, _utilsBaseUtilJs.isObject)(requestConfigs.cacheStore) ? requestConfigs.cacheStore : defaultCacheStore;
+	    var cacheResp = cacheStore.get(url);
+	
+	    if (cacheResp) {
+	      return Promise.resolve(cacheResp);
+	    } else {
+	
+	      var promise = fetch(url, requestConfigs);
+	
+	      // we need to store a promise as cache to solve the several async request when they are the same url
+	      cacheStore.set(url, promise);
+	
+	      return promise;
+	    }
+	  } else {
+	    return fetch(url, requestConfigs);
+	  }
+	}
+	
 	/**
 	 * @param url
 	 * @param method
@@ -260,7 +296,7 @@
 	    var bodyAfterTransform = executeHttpTransformers(requestConfigs.data, getHeadersGetter(requestConfigs.headers), undefined, requestConfigs.requestTransformers);
 	    var configsAfterTransform = Object.assign({ body: bodyAfterTransform }, requestConfigs);
 	
-	    return fetch(url, configsAfterTransform).then(processResponse, processResponse);
+	    return sendReq(url, configsAfterTransform).then(processResponse, processResponse);
 	  };
 	
 	  // build the request execute chain
@@ -341,6 +377,7 @@
 	  credentials: 'omit',
 	  cache: 'no-cache',
 	
+	  cacheStore: false,
 	  interceptors: [],
 	  requestTransformers: [defaultRequestTransformer],
 	  responseTransformers: [defaultResponseTransformer]
@@ -922,6 +959,459 @@
 	/**
 	 * @author Kuitos
 	 * @homepage https://github.com/kuitos/
+	 * @since 2015-10-20
+	 * lru cache module
+	 */
+	
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	var _dataStructureLinkedListHashDoubleLinkedListJs = __webpack_require__(8);
+	
+	var _dataStructureLinkedListHashDoubleLinkedListJs2 = _interopRequireDefault(_dataStructureLinkedListHashDoubleLinkedListJs);
+	
+	// update lru entry head node
+	function updateLRUEntry(element, lruEntry) {
+	  lruEntry.remove(element);
+	  lruEntry.insertHead(element);
+	}
+	
+	var LRUCache = (function () {
+	  function LRUCache(capacity) {
+	    _classCallCheck(this, LRUCache);
+	
+	    this.capacity = capacity || Number.MAX_VALUE;
+	    this._lruEntry = new _dataStructureLinkedListHashDoubleLinkedListJs2['default']();
+	    this._cache = new Map();
+	  }
+	
+	  _createClass(LRUCache, [{
+	    key: 'get',
+	    value: function get(key) {
+	
+	      // when capacity less than MAX_VALUE,we need to refresh lru entry
+	      if (this.capacity < Number.MAX_VALUE) {
+	        updateLRUEntry(key, this._lruEntry);
+	      }
+	
+	      return this._cache.get(key);
+	    }
+	  }, {
+	    key: 'set',
+	    value: function set(key, value) {
+	
+	      if (this.capacity < Number.MAX_VALUE) {
+	        updateLRUEntry(key, this._lruEntry);
+	      }
+	
+	      if (this._cache.size > this.capacity) {
+	        // eliminate the last node of lru entry
+	        this._cache['delete'](this._lruEntry.removeEnd().element);
+	      }
+	
+	      // return cache for invocation chaining
+	      return this._cache.set(key, value);
+	    }
+	  }, {
+	    key: 'delete',
+	    value: function _delete(key) {
+	      this._lruEntry.remove(key);
+	      this._cache['delete'](key);
+	    }
+	  }, {
+	    key: 'clear',
+	    value: function clear() {
+	      this._lruEntry.clear();
+	      this._cache.clear();
+	    }
+	  }]);
+	
+	  return LRUCache;
+	})();
+	
+	exports['default'] = LRUCache;
+	module.exports = exports['default'];
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * @author Kuitos
+	 * @homepage https://github.com/kuitos/
+	 * @since 2015-10-22
+	 */
+	
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var _DoubleLinkedListJs = __webpack_require__(9);
+	
+	var _DoubleLinkedListJs2 = _interopRequireDefault(_DoubleLinkedListJs);
+	
+	var _NodeJs = __webpack_require__(10);
+	
+	var _NodeJs2 = _interopRequireDefault(_NodeJs);
+	
+	var HashDoubleLinkedList = (function (_DoubleLinkedList) {
+	  _inherits(HashDoubleLinkedList, _DoubleLinkedList);
+	
+	  function HashDoubleLinkedList() {
+	    _classCallCheck(this, HashDoubleLinkedList);
+	
+	    _get(Object.getPrototypeOf(HashDoubleLinkedList.prototype), 'constructor', this).call(this);
+	    this._hashMap = new Map();
+	  }
+	
+	  _createClass(HashDoubleLinkedList, [{
+	    key: 'find',
+	    value: function find(element) {
+	      return this._hashMap.get(element) || null;
+	    }
+	  }, {
+	    key: 'insertBefore',
+	    value: function insertBefore(beforeBaseElement, element) {
+	      var node = _get(Object.getPrototypeOf(HashDoubleLinkedList.prototype), 'insertBefore', this).call(this, beforeBaseElement, element);
+	      this._hashMap.set(element, node);
+	      return node;
+	    }
+	  }, {
+	    key: 'insertAfter',
+	    value: function insertAfter(afterBaseElement, element) {
+	      var node = _get(Object.getPrototypeOf(HashDoubleLinkedList.prototype), 'insertAfter', this).call(this, afterBaseElement, element);
+	      this._hashMap.set(element, node);
+	      return node;
+	    }
+	  }, {
+	    key: 'insertHead',
+	    value: function insertHead(element) {
+	      var node = _get(Object.getPrototypeOf(HashDoubleLinkedList.prototype), 'insertHead', this).call(this, element);
+	      this._hashMap.set(element, node);
+	      return node;
+	    }
+	  }, {
+	    key: 'insertEnd',
+	    value: function insertEnd(element) {
+	      var node = _get(Object.getPrototypeOf(HashDoubleLinkedList.prototype), 'insertEnd', this).call(this, element);
+	      this._hashMap.set(element, node);
+	      return node;
+	    }
+	  }, {
+	    key: 'remove',
+	    value: function remove(element) {
+	      var node = _get(Object.getPrototypeOf(HashDoubleLinkedList.prototype), 'remove', this).call(this, element);
+	      this._hashMap['delete'](element);
+	      return node;
+	    }
+	  }, {
+	    key: 'display',
+	    value: function display() {
+	
+	      _get(Object.getPrototypeOf(HashDoubleLinkedList.prototype), 'display', this).call(this);
+	
+	      var _iteratorNormalCompletion = true;
+	      var _didIteratorError = false;
+	      var _iteratorError = undefined;
+	
+	      try {
+	        for (var _iterator = this._hashMap[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	          var entry = _step.value;
+	
+	          console.log(entry);
+	        }
+	      } catch (err) {
+	        _didIteratorError = true;
+	        _iteratorError = err;
+	      } finally {
+	        try {
+	          if (!_iteratorNormalCompletion && _iterator['return']) {
+	            _iterator['return']();
+	          }
+	        } finally {
+	          if (_didIteratorError) {
+	            throw _iteratorError;
+	          }
+	        }
+	      }
+	    }
+	  }]);
+	
+	  return HashDoubleLinkedList;
+	})(_DoubleLinkedListJs2['default']);
+	
+	exports['default'] = HashDoubleLinkedList;
+	module.exports = exports['default'];
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * @author Kuitos
+	 * @homepage https://github.com/kuitos/
+	 * @since 2015-10-21
+	 */
+	
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	var _NodeJs = __webpack_require__(10);
+	
+	var _NodeJs2 = _interopRequireDefault(_NodeJs);
+	
+	var DoubleLinkedList = (function () {
+	  function DoubleLinkedList() {
+	    _classCallCheck(this, DoubleLinkedList);
+	
+	    this._headNode = new _NodeJs2['default']();
+	    this._endNode = new _NodeJs2['default']();
+	  }
+	
+	  _createClass(DoubleLinkedList, [{
+	    key: 'find',
+	    value: function find(element) {
+	
+	      var currentNode = this._headNode;
+	
+	      while (currentNode && currentNode.element !== element) {
+	        currentNode = currentNode.next;
+	      }
+	
+	      return currentNode;
+	    }
+	  }, {
+	    key: 'findHead',
+	    value: function findHead() {
+	      return this._headNode;
+	    }
+	  }, {
+	    key: 'findEnd',
+	    value: function findEnd() {
+	      return this._endNode;
+	    }
+	  }, {
+	    key: 'insertBefore',
+	    value: function insertBefore(beforeBaseElement, element) {
+	
+	      var beforeBaseNode = this.find(beforeBaseElement);
+	
+	      if (beforeBaseNode === null || beforeBaseNode === this._headNode || beforeBaseNode.prev.element === null) {
+	        return this.insertHead(element);
+	      } else {
+	
+	        var node = new _NodeJs2['default'](element);
+	        node.next = beforeBaseNode;
+	        node.prev = beforeBaseNode.prev;
+	        beforeBaseNode.prev = node;
+	        node.prev.next = node;
+	
+	        return node;
+	      }
+	    }
+	  }, {
+	    key: 'insertAfter',
+	    value: function insertAfter(afterBaseElement, element) {
+	
+	      var afterBaseNode = this.find(afterBaseElement);
+	
+	      if (afterBaseNode === null || afterBaseNode === this._endNode || afterBaseNode.next.element === null) {
+	        return this.insertEnd(element);
+	      } else {
+	
+	        var node = new _NodeJs2['default'](element);
+	
+	        node.prev = afterBaseNode;
+	        node.next = afterBaseNode.next;
+	        afterBaseNode.next = node;
+	        node.next.prev = node;
+	
+	        return node;
+	      }
+	    }
+	  }, {
+	    key: 'insertHead',
+	    value: function insertHead(element) {
+	
+	      var node = new _NodeJs2['default'](element);
+	
+	      if (this._headNode.element === null) {
+	
+	        this._headNode = node;
+	        this._headNode.next = this._endNode;
+	        this._endNode.prev = this._headNode;
+	      } else {
+	
+	        node.next = this._headNode;
+	        this._headNode.prev = node;
+	        this._headNode = node;
+	
+	        if (this._endNode.element === null) {
+	          this.insertEnd(this._endNode.prev.element);
+	        }
+	      }
+	
+	      return node;
+	    }
+	  }, {
+	    key: 'insertEnd',
+	    value: function insertEnd(element) {
+	
+	      var node = new _NodeJs2['default'](element);
+	
+	      if (this._endNode.element === null) {
+	
+	        this._endNode = node;
+	        this._endNode.prev = this._headNode;
+	        this._headNode.next = this._endNode;
+	      } else {
+	
+	        node.prev = this._endNode;
+	        this._endNode.next = node;
+	        this._endNode = node;
+	
+	        if (this._headNode.element === null) {
+	          this.insertHead(this._headNode.next.element);
+	        }
+	      }
+	
+	      return node;
+	    }
+	  }, {
+	    key: 'remove',
+	    value: function remove(element) {
+	
+	      var node = this.find(element);
+	
+	      if (node !== null) {
+	
+	        if (node === this._headNode) {
+	
+	          // remove head
+	          this._headNode = this._headNode.next;
+	          this._headNode.prev = null;
+	        } else if (node === this._endNode) {
+	
+	          // remove end
+	          this._endNode = this._endNode.prev;
+	          this._endNode.next = null;
+	        } else {
+	
+	          var prevNode = node.prev;
+	          var nextNode = node.next;
+	          prevNode.next = nextNode;
+	          nextNode.prev = prevNode;
+	        }
+	      }
+	
+	      return node;
+	    }
+	  }, {
+	    key: 'removeHead',
+	    value: function removeHead() {
+	      return this.remove(this._headNode.element);
+	    }
+	  }, {
+	    key: 'removeEnd',
+	    value: function removeEnd() {
+	      return this.remove(this._endNode.element);
+	    }
+	  }, {
+	    key: 'clear',
+	    value: function clear() {
+	      this._headNode = new _NodeJs2['default']();
+	      this._endNode = new _NodeJs2['default']();
+	    }
+	  }, {
+	    key: 'display',
+	    value: function display() {
+	
+	      var currentNode = this._headNode;
+	
+	      while (currentNode) {
+	        console.log(currentNode);
+	        currentNode = currentNode.next;
+	      }
+	    }
+	  }]);
+	
+	  return DoubleLinkedList;
+	})();
+	
+	exports['default'] = DoubleLinkedList;
+	module.exports = exports['default'];
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	/**
+	 * @author Kuitos
+	 * @homepage https://github.com/kuitos/
+	 * @since 2015-10-21
+	 * node structure
+	 */
+	
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Node = function Node() {
+	  var element = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+	  var prevNode = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+	  var nextNode = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
+	
+	  _classCallCheck(this, Node);
+	
+	  this.element = element;
+	  this.prev = prevNode;
+	  this.next = nextNode;
+	};
+	
+	exports["default"] = Node;
+	module.exports = exports["default"];
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * @author Kuitos
+	 * @homepage https://github.com/kuitos/
 	 * @since 2015-10-14
 	 * restful like use fetch api,inspired by ngResource
 	 */
@@ -1084,138 +1574,6 @@
 	
 	exports['default'] = FetchHttpResource;
 	module.exports = exports['default'];
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * @author Kuitos
-	 * @homepage https://github.com/kuitos/
-	 * @since 2015-10-20
-	 * lru cache module
-	 */
-	
-	'use strict';
-	
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-	
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-	
-	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	var _dataStructureNodeJs = __webpack_require__(9);
-	
-	var _dataStructureNodeJs2 = _interopRequireDefault(_dataStructureNodeJs);
-	
-	var lruEntry = new Map();
-	
-	var head = null;
-	var end = null;
-	
-	function refreshEntry(entry) {
-	
-	  lruEntry;
-	}
-	
-	function setHead2Entry(key) {}
-	
-	var LRUCache = (function (_Map) {
-	  _inherits(LRUCache, _Map);
-	
-	  function LRUCache(capacity) {
-	    _classCallCheck(this, LRUCache);
-	
-	    _get(Object.getPrototypeOf(LRUCache.prototype), 'constructor', this).call(this);
-	    this.capacity = capacity || Number.MAX_VALUE;
-	  }
-	
-	  _createClass(LRUCache, [{
-	    key: 'get',
-	    value: function get(key) {
-	
-	      // when capacity less than MAX_VALUE,we don't need to refresh lru entry
-	      if (this.capacity < Number.MAX_VALUE) {
-	        head = new _dataStructureNodeJs2['default'](key);
-	      }
-	
-	      return _get(Object.getPrototypeOf(LRUCache.prototype), 'get', this).call(this, key);
-	    }
-	  }, {
-	    key: 'set',
-	    value: function set(key, value) {
-	
-	      head = new _dataStructureNodeJs2['default'](key);
-	      if (!end) {
-	        end = new _dataStructureNodeJs2['default'](key);
-	      }
-	
-	      if (this.size > this.capacity) {
-	        this['delete'](end.element);
-	      }
-	
-	      // return cache for invocation chaining
-	      return _get(Object.getPrototypeOf(LRUCache.prototype), 'set', this).call(this, key, value);
-	    }
-	  }, {
-	    key: 'delete',
-	    value: function _delete(key) {
-	      _get(Object.getPrototypeOf(LRUCache.prototype), 'delete', this).call(this, key);
-	    }
-	  }, {
-	    key: 'clear',
-	    value: function clear() {
-	      _get(Object.getPrototypeOf(LRUCache.prototype), 'clear', this).call(this);
-	    }
-	  }]);
-	
-	  return LRUCache;
-	})(Map);
-	
-	exports['default'] = LRUCache;
-	module.exports = exports['default'];
-
-/***/ },
-/* 9 */
-/***/ function(module, exports) {
-
-	/**
-	 * @author Kuitos
-	 * @homepage https://github.com/kuitos/
-	 * @since 2015-10-21
-	 * node structure
-	 */
-	
-	"use strict";
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	var Node = function Node() {
-	  var element = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
-	  var prevNode = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
-	  var nextNode = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
-	
-	  _classCallCheck(this, Node);
-	
-	  this.element = element;
-	  this.prev = prevNode;
-	  this.next = nextNode;
-	};
-	
-	exports["default"] = Node;
-	module.exports = exports["default"];
 
 /***/ }
 /******/ ]);

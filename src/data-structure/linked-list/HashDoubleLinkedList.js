@@ -5,7 +5,7 @@
  */
 
 import DoubleLinkedList from './DoubleLinkedList.js';
-
+import Node from '../Node.js';
 
 export default class HashDoubleLinkedList extends DoubleLinkedList {
 
@@ -15,7 +15,7 @@ export default class HashDoubleLinkedList extends DoubleLinkedList {
   }
 
   find(element) {
-    return this._hashMap.get(element);
+    return this._hashMap.get(element) || null;
   }
 
   insertBefore(beforeBaseElement, element) {

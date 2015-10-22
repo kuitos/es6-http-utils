@@ -9,7 +9,8 @@ import Node from './../Node.js';
 export default class DoubleLinkedList {
 
   constructor() {
-    this._headNode = this._endNode = new Node();
+    this._headNode = new Node();
+    this._endNode = new Node();
   }
 
   find(element) {
@@ -35,7 +36,7 @@ export default class DoubleLinkedList {
 
     let beforeBaseNode = this.find(beforeBaseElement);
 
-    if (beforeBaseNode === this._headNode || beforeBaseNode.prev.element === null) {
+    if (beforeBaseNode === null || beforeBaseNode === this._headNode || beforeBaseNode.prev.element === null) {
       return this.insertHead(element);
     } else {
 
@@ -54,7 +55,7 @@ export default class DoubleLinkedList {
 
     let afterBaseNode = this.find(afterBaseElement);
 
-    if (afterBaseNode === this._endNode || afterBaseNode.next.element === null) {
+    if (afterBaseNode === null || afterBaseNode === this._endNode || afterBaseNode.next.element === null) {
       return this.insertEnd(element);
     } else {
 
@@ -85,6 +86,10 @@ export default class DoubleLinkedList {
       node.next = this._headNode;
       this._headNode.prev = node;
       this._headNode = node;
+
+      if (this._endNode.element === null) {
+        this.insertEnd(this._endNode.prev.element);
+      }
     }
 
     return node;
@@ -105,6 +110,10 @@ export default class DoubleLinkedList {
       node.prev = this._endNode;
       this._endNode.next = node;
       this._endNode = node;
+
+      if (this._headNode.element === null) {
+        this.insertHead(this._headNode.next.element);
+      }
     }
 
     return node;
@@ -114,35 +123,44 @@ export default class DoubleLinkedList {
 
     let node = this.find(element);
 
-    if (node === this._headNode) {
+    if (node !== null) {
 
-      // remove head
-      this._headNode = this._headNode.next;
-      this._headNode.prev = null;
+      if (node === this._headNode) {
 
-    } else if (node === this._endNode) {
+        // remove head
+        this._headNode = this._headNode.next;
+        this._headNode.prev = null;
 
-      // remove end
-      this._endNode = this._endNode.prev;
-      this._endNode.next = null;
+      } else if (node === this._endNode) {
 
-    } else {
+        // remove end
+        this._endNode = this._endNode.prev;
+        this._endNode.next = null;
 
-      let prevNode = node.prev;
-      let nextNode = node.next;
-      prevNode.next = nextNode;
-      nextNode.prev = prevNode;
+      } else {
+
+        let prevNode = node.prev;
+        let nextNode = node.next;
+        prevNode.next = nextNode;
+        nextNode.prev = prevNode;
+      }
+
     }
 
     return node;
   }
 
   removeHead() {
-    return this.remove(this._headNode);
+    return this.remove(this._headNode.element);
   }
 
   removeEnd() {
-    return this.remove(this._endNode);
+    return this.remove(this._endNode.element);
+  }
+
+  clear() {
+    this._headNode = new Node();
+    this._endNode = new Node();
   }
 
   display() {

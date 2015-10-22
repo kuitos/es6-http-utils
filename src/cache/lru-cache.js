@@ -5,61 +5,55 @@
  * lru cache module
  */
 
-import Node from '../data-structure/Node.js';
+import HashDoubleLinkedList from '../data-structure/linked-list/HashDoubleLinkedList.js';
 
-let lruEntry = new Map();
-
-let head = null;
-let end = null;
-
-function refreshEntry(entry) {
-
-  lruEntry
-
+// update lru entry head node
+function updateLRUEntry(element, lruEntry) {
+  lruEntry.remove(element);
+  lruEntry.insertHead(element);
 }
 
-function setHead2Entry(key) {
-
-}
-
-export default class LRUCache extends Map {
+export default class LRUCache {
 
   constructor(capacity) {
-    super();
     this.capacity = capacity || Number.MAX_VALUE;
+    this._lruEntry = new HashDoubleLinkedList();
+    this._cache = new Map();
   }
 
   get(key) {
 
-    // when capacity less than MAX_VALUE,we don't need to refresh lru entry
+    // when capacity less than MAX_VALUE,we need to refresh lru entry
     if (this.capacity < Number.MAX_VALUE) {
-      head = new Node(key);
+      updateLRUEntry(key, this._lruEntry);
     }
 
-    return super.get(key);
+    return this._cache.get(key);
   }
 
   set(key, value) {
 
-    head = new Node(key);
-    if (!end) {
-      end = new Node(key);
+    if (this.capacity < Number.MAX_VALUE) {
+      updateLRUEntry(key, this._lruEntry);
     }
 
-    if (this.size > this.capacity) {
-      this.delete(end.element);
+    if (this._cache.size > this.capacity) {
+      // eliminate the last node of lru entry
+      this._cache.delete(this._lruEntry.removeEnd().element);
     }
 
     // return cache for invocation chaining
-    return super.set(key, value);
+    return this._cache.set(key, value);
   }
 
   delete(key) {
-    super.delete(key);
+    this._lruEntry.remove(key);
+    this._cache.delete(key);
   }
 
   clear() {
-    super.clear();
+    this._lruEntry.clear();
+    this._cache.clear();
   }
 
 }

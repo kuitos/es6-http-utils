@@ -18,8 +18,8 @@ PostsResource.get().then(response => {
   console.log(response);
 });
 
-PostsResource.save({id: 11, userName: 'kuitos'}).then(response => {
-  console.log(response);
-});
-
-PostsResource.update({userName: 'god12312'});
+//PostsResource.save({id: 11, userName: 'kuitos'}).then(response => {
+//  console.log(response);
+//});
+//
+//PostsResource.update({userName: 'god12312'});
