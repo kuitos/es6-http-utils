@@ -31,7 +31,7 @@ function defaultResponseTransformer(response, headersGetter) {
 
   if (contentType) {
 
-    let isDataConsumed = 'data' in response;
+    let isDataConsumed = response.hasOwnProperty('data');
 
     // because the Response instance can only consume once,if the response had a data property,it means it had been consumed
     // so we need to get from data property
@@ -67,7 +67,7 @@ function combineResponseWithRequest(request, response) {
 
     let value = request[prop];
     // the prop which response not exist and it is not a function will be combine
-    if (!isFunction(value) && !(prop in response)) {
+    if (!isFunction(value) && !response.hasOwnProperty(prop)) {
       response[prop] = value;
     }
 
