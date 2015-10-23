@@ -8,6 +8,12 @@
 npm install es6-utils
 ```
 
+#### 查看demo
+
+```bash
+npm run dev
+```
+
 #### Utils
 
 * http 网络请求模块,详见[这里](https://github.com/kuitos/web-fetch-request/tree/master/src/http)

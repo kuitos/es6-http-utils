@@ -138,6 +138,8 @@ let defaultCacheStore = new LRUCache();
 
 function sendReq(url, requestConfigs) {
 
+  let promise = fetch(url, requestConfigs);
+
   if (requestConfigs.cacheStore) {
 
     let cacheStore = isObject(requestConfigs.cacheStore) ? requestConfigs.cacheStore : defaultCacheStore;
@@ -146,9 +148,6 @@ function sendReq(url, requestConfigs) {
     if (cacheResp) {
       return Promise.resolve(cacheResp);
     } else {
-
-      let promise = fetch(url, requestConfigs);
-
       // we need to store a promise as cache to solve the several async request when they are the same url
       cacheStore.set(url, promise);
 
@@ -156,7 +155,7 @@ function sendReq(url, requestConfigs) {
     }
 
   } else {
-    return fetch(url, requestConfigs);
+    return promise;
   }
 }
 
