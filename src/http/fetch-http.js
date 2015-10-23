@@ -2,7 +2,7 @@
  * @author Kuitos
  * @homepage https://github.com/kuitos/
  * @since 2015-09-21
- * Fetch request api.Inspired by angular $http
+ * Fetch request api,inspired by angular $http
  */
 
 import unused from 'whatwg-fetch';
@@ -40,7 +40,7 @@ function defaultResponseTransformer(response, headersGetter) {
     } else {
       response.data = isDataConsumed ? response.data : response.text();
     }
-    // todo handler more content type of data such as images/form we need to convert it to blob/formData
+    // todo handler more content type of data such as images/form,we need to convert them to blob/formData
 
   }
 
