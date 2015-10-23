@@ -12,6 +12,7 @@ npm install es6-utils
 
 * http 网络请求模块,详见[这里](https://github.com/kuitos/web-fetch-request/tree/master/src/http)
 * cache 缓存模块,详见[这里](https://github.com/kuitos/web-fetch-request/tree/master/src/cache)
+* data-structure 通用数据结构 详见[这里](https://github.com/kuitos/web-fetch-request/tree/master/src/data-structure)
 	
 
 
