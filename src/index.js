@@ -5,9 +5,10 @@
  */
 import FetchHttp from './http/fetch-http.js';
 import FetchHttpResource from './http/fetch-http-resource.js';
-import Cache from './cache/lru-cache.js';
+import LRUCache from './cache/lru-cache.js';
 
 export {
   FetchHttp,
-  FetchHttpResource
+  FetchHttpResource,
+  LRUCache
 };
