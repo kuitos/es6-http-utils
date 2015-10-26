@@ -23,12 +23,14 @@ export default class LRUCache {
 
   get(key) {
 
+    let value = this._cache.get(key);
+
     // when capacity less than MAX_VALUE,we need to refresh lru entry
-    if (this.capacity < Number.MAX_VALUE) {
+    if (value && this.capacity < Number.MAX_VALUE) {
       updateLRUEntry(key, this._lruEntry);
     }
 
-    return this._cache.get(key);
+    return value;
   }
 
   set(key, value) {
@@ -37,7 +39,7 @@ export default class LRUCache {
       updateLRUEntry(key, this._lruEntry);
     }
 
-    if (this._cache.size > this.capacity) {
+    if (this._cache.size === this.capacity) {
       // eliminate the last node of lru entry
       this._cache.delete(this._lruEntry.removeEnd().element);
     }

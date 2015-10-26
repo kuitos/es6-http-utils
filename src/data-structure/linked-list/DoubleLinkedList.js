@@ -13,6 +13,9 @@ export default class DoubleLinkedList {
     this._endNode = new Node();
   }
 
+  /**
+   * @returns Node or null
+   */
   find(element) {
 
     let currentNode = this._headNode;
