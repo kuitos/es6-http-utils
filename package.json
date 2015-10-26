@@ -9,7 +9,6 @@
     "dev": "json-mock-kuitos src/mock/db.json -s / -p 8080 & node server.js",
     "codecheck": "NODE_ENV=test eslint src/**/*.js",
     "precommit": "npm run codecheck",
-    "prepush": "npm run codecheck",
     "start": "json-mock-kuitos src/mock/db.json -s / -p 8080 & node server.js",
     "test": "BABEL_JEST_STAGE=0 jest --verbose --watch"
   },
