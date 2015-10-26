@@ -78,6 +78,7 @@
 	
 	exports.FetchHttp = _httpFetchHttpJs2['default'];
 	exports.FetchHttpResource = _httpFetchHttpResourceJs2['default'];
+	exports.LRUCache = _cacheLruCacheJs2['default'];
 
 /***/ },
 /* 2 */
@@ -87,7 +88,7 @@
 	 * @author Kuitos
 	 * @homepage https://github.com/kuitos/
 	 * @since 2015-09-21
-	 * Fetch request api.Inspired by angular $http
+	 * Fetch request api,inspired by angular $http
 	 */
 	
 	'use strict';
@@ -132,16 +133,16 @@
 	
 	  if (contentType) {
 	
-	    var isDataConsumed = ('data' in response);
+	    var isDataConsumed = response.hasOwnProperty('data');
 	
-	    // because the Response instance can only consume once,if the response had a data property,it means it had been consumed
+	    // because of the Response instance can only consume once,if the response had a data property,it means it had been consumed
 	    // so we need to get from data property
 	    if (contentType.indexOf(_constantsHttpConstantsJs.APPLICATION_JSON) === 0) {
 	      response.data = isDataConsumed ? response.data : response.json();
 	    } else {
 	      response.data = isDataConsumed ? response.data : response.text();
 	    }
-	    // todo handler more content type of data such as images/form we need to convert it to blob/formData
+	    // todo handler more content type of data such as images/form,we need to convert them to blob/formData
 	  }
 	
 	  return response;
@@ -167,7 +168,7 @@
 	
 	    var value = request[prop];
 	    // the prop which response not exist and it is not a function will be combine
-	    if (!(0, _utilsBaseUtilJs.isFunction)(value) && !(prop in response)) {
+	    if (!(0, _utilsBaseUtilJs.isFunction)(value) && !response.hasOwnProperty(prop)) {
 	      response[prop] = value;
 	    }
 	  });
@@ -234,6 +235,8 @@
 	
 	function sendReq(url, requestConfigs) {
 	
+	  var promise = fetch(url, requestConfigs);
+	
 	  if (requestConfigs.cacheStore) {
 	
 	    var cacheStore = (0, _utilsBaseUtilJs.isObject)(requestConfigs.cacheStore) ? requestConfigs.cacheStore : defaultCacheStore;
@@ -242,16 +245,13 @@
 	    if (cacheResp) {
 	      return Promise.resolve(cacheResp);
 	    } else {
-	
-	      var promise = fetch(url, requestConfigs);
-	
 	      // we need to store a promise as cache to solve the several async request when they are the same url
 	      cacheStore.set(url, promise);
 	
 	      return promise;
 	    }
 	  } else {
-	    return fetch(url, requestConfigs);
+	    return promise;
 	  }
 	}
 	
@@ -998,12 +998,14 @@
 	    key: 'get',
 	    value: function get(key) {
 	
+	      var value = this._cache.get(key);
+	
 	      // when capacity less than MAX_VALUE,we need to refresh lru entry
-	      if (this.capacity < Number.MAX_VALUE) {
+	      if (value && this.capacity < Number.MAX_VALUE) {
 	        updateLRUEntry(key, this._lruEntry);
 	      }
 	
-	      return this._cache.get(key);
+	      return value;
 	    }
 	  }, {
 	    key: 'set',
@@ -1013,7 +1015,7 @@
 	        updateLRUEntry(key, this._lruEntry);
 	      }
 	
-	      if (this._cache.size > this.capacity) {
+	      if (this._cache.size === this.capacity) {
 	        // eliminate the last node of lru entry
 	        this._cache['delete'](this._lruEntry.removeEnd().element);
 	      }
@@ -1197,6 +1199,10 @@
 	    this._headNode = new _NodeJs2['default']();
 	    this._endNode = new _NodeJs2['default']();
 	  }
+	
+	  /**
+	   * @returns Node or null
+	   */
 	
 	  _createClass(DoubleLinkedList, [{
 	    key: 'find',
