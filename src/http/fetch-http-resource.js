@@ -110,6 +110,11 @@ class FetchHttpResource {
         let extractParams = Object.assign({}, defaultParams, params);
         let url = genUrlFromTemplate(urlTemplate, extractParams);
 
+        // strip trailing slashes and set the url (unless this behavior is specifically disabled)
+        if (FetchHttpResource.defaults.stripTrailingSlashes) {
+          url = url.replace(/\/+$/, '') || '/';
+        }
+
         configs.params = getRestParamsFromUrlTemplate(urlTemplate, extractParams);
 
         return FetchHttp(url, method, configs).then(response => {
@@ -142,7 +147,9 @@ FetchHttpResource.defaults = {
     'partUpdate': {method: REQUEST_METHODS.PATCH},
     'delete'    : {method: REQUEST_METHODS.DELETE}, // physical delete
     'remove'    : {method: REQUEST_METHODS.DELETE}  // logical delete
-  }
+  },
+
+  stripTrailingSlashes: false
 
 };
 

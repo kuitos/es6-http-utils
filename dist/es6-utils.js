@@ -1545,6 +1545,11 @@
 	      var extractParams = Object.assign({}, defaultParams, params);
 	      var url = genUrlFromTemplate(urlTemplate, extractParams);
 	
+	      // strip trailing slashes and set the url (unless this behavior is specifically disabled)
+	      if (FetchHttpResource.defaults.stripTrailingSlashes) {
+	        url = url.replace(/\/+$/, '') || '/';
+	      }
+	
 	      configs.params = getRestParamsFromUrlTemplate(urlTemplate, extractParams);
 	
 	      return (0, _fetchHttpJs2['default'])(url, method, configs).then(function (response) {
@@ -1574,7 +1579,9 @@
 	    'partUpdate': { method: _constantsHttpConstantsJs.REQUEST_METHODS.PATCH },
 	    'delete': { method: _constantsHttpConstantsJs.REQUEST_METHODS.DELETE }, // physical delete
 	    'remove': { method: _constantsHttpConstantsJs.REQUEST_METHODS.DELETE } // logical delete
-	  }
+	  },
+	
+	  stripTrailingSlashes: false
 	
 	};
 	
