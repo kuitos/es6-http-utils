@@ -10,7 +10,7 @@
     "codecheck": "NODE_ENV=test eslint src/**/*.js",
     "precommit": "npm run codecheck",
     "start": "json-mock-kuitos src/mock/db.json -s / -p 8080 & node server.js",
-    "test": "BABEL_JEST_STAGE=0 jest --verbose --watch"
+    "test": "BABEL_JEST_STAGE=0 jest --config .jestrc --verbose --watch"
   },
   "keywords": [
     "es6",
@@ -40,25 +40,6 @@
     "webpack": "^1.11.0",
     "webpack-dev-middleware": "^1.2.0",
     "webpack-hot-middleware": "^2.0.0"
-  },
-  "jest": {
-    "modulePathIgnorePatterns": [
-      "/lib/",
-      "/node_modules/"
-    ],
-    "persistModuleRegistryBetweenSpecs": true,
-    "preprocessorIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "rootDir": "",
-    "scriptPreprocessor": "<rootDir>/node_modules/babel-jest",
-    "testPathDirs": [
-      "<rootDir>/src"
-    ],
-    "unmockedModulePathPatterns": [
-      "<rootDir>/node_modules/",
-      "<rootDir>/src/"
-    ]
   },
   "dependencies": {
     "whatwg-fetch": "^0.10.0"
