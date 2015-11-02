@@ -149,7 +149,7 @@ FetchHttpResource.defaults = {
     'remove'    : {method: REQUEST_METHODS.DELETE}  // logical delete
   },
 
-  stripTrailingSlashes: false
+  stripTrailingSlashes: true
 
 };
 
