@@ -168,7 +168,7 @@
 	
 	    var value = request[prop];
 	    // the prop which response not exist and it is not a function will be combine
-	    if (!(0, _utilsBaseUtilJs.isFunction)(value) && !response.hasOwnProperty(prop)) {
+	    if (!(0, _utilsBaseUtilJs.isFunction)(value) && !(prop in response)) {
 	      response[prop] = value;
 	    }
 	  });
@@ -1581,7 +1581,7 @@
 	    'remove': { method: _constantsHttpConstantsJs.REQUEST_METHODS.DELETE } // logical delete
 	  },
 	
-	  stripTrailingSlashes: false
+	  stripTrailingSlashes: true
 	
 	};
 	

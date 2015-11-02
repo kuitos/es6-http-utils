@@ -67,7 +67,7 @@ function combineResponseWithRequest(request, response) {
 
     let value = request[prop];
     // the prop which response not exist and it is not a function will be combine
-    if (!isFunction(value) && !response.hasOwnProperty(prop)) {
+    if (!isFunction(value) && !(prop in response)) {
       response[prop] = value;
     }
 
