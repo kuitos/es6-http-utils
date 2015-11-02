@@ -9,8 +9,8 @@ var webpack = require('webpack');
 module.exports = {
   devtool: 'source-map',
   entry  : [
-    'webpack-hot-middleware/client?path=http://localhost:3000/__webpack_hmr',
-    './src/demos/app'
+    'webpack-hot-middleware/client?path=http://localhost:3001/__webpack_hmr',
+    './demos/app'
   ],
   output : {
     path      : path.join(__dirname, 'build'),
@@ -45,7 +45,7 @@ module.exports = {
         test   : /\.js$/,
         loaders: ['babel'],
         exclude: /(node_modules|bower_components)/,
-        include: [path.join(__dirname, 'src'), path.join(__dirname, 'test')]
+        include: [path.join(__dirname, 'src'), path.join(__dirname, 'test'), path.join(__dirname, 'demos')]
       }
     ]
   }

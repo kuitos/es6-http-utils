@@ -17,11 +17,11 @@ app.use(require('webpack-dev-middleware')(compiler, {
 app.use(require('webpack-hot-middleware')(compiler));
 app.use(express.static(__dirname));
 
-app.listen(3000, 'localhost', function (err) {
+app.listen(3001, 'localhost', function (err) {
   if (err) {
     console.log(err);
     return;
   }
 
-  console.log('Listening at http://localhost:3000');
+  console.log('Listening at http://localhost:3001');
 });

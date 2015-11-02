@@ -18,6 +18,12 @@ PostsResource.get().then(response => {
   console.log(response);
 });
 
+let Posts = new FetchHttpResource('https://api.github.com/repos/kuitos/kuitos.github.io/issues');
+
+Posts.query().then(posts => {
+  console.log(posts);
+});
+
 //PostsResource.save({id: 11, userName: 'kuitos'}).then(response => {
 //  console.log(response);
 //});
