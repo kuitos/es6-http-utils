@@ -8,7 +8,7 @@ import FetchHttp from './../../http/fetch-http';
 import {EventEmitter} from 'events';
 
 const setTimeout = window.setTimeout;
-const interceptorBlackList = FetchHttp.interceptorBlackList;
+const interceptorBlackList = FetchHttp.defaultConfigs.interceptorBlackList;
 
 function isUrlInInterceptorBlackList(url) {
   return !!~interceptorBlackList.indexOf(url);
