@@ -7,8 +7,8 @@
 
 import unused from 'whatwg-fetch';
 import {REQUEST_METHODS, APPLICATION_JSON} from '../constants/http-constants.js';
-import {isString, isFunction, isObject, isDate, isFile, isBlob, isFormData, toJson} from '../utils/base-util.js';
-import {urlIsSameOrigin, encodeUriQuery} from '../utils/web-util.js';
+import {isString, isFunction, isObject, isDate, isFile, isBlob, isFormData, toJson} from '../utils/object-util';
+import {urlIsSameOrigin, encodeUriQuery} from '../utils/url-util';
 import LRUCache from '../cache/lru-cache.js';
 
 const fetch = window.fetch;
@@ -277,6 +277,7 @@ FetchHttp.defaultConfigs = {
 
   cacheStore          : false,
   interceptors        : [],
+  interceptorBlackList: [],
   requestTransformers : [defaultRequestTransformer],
   responseTransformers: [defaultResponseTransformer]
 

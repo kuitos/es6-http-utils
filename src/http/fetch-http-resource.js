@@ -7,7 +7,7 @@
 
 import FetchHttp from './fetch-http.js';
 import {REQUEST_METHODS} from '../constants/http-constants.js';
-import {encodeUriSegment} from '../utils/web-util.js';
+import {encodeUriSegment} from '../utils/url-util';
 
 /**
  * use params to fill the url template

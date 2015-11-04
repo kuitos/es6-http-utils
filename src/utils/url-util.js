@@ -4,7 +4,7 @@
  * @since 2015-10-14
  */
 
-import {isString} from './base-util.js';
+import {isString} from './object-util';
 /**
  * url parser
  * @see https://github.com/angular/angular.js/blob/master/src%2Fng%2FurlUtils.js
