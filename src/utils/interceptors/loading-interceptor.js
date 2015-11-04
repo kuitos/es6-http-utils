@@ -33,7 +33,7 @@ export default {
 
           if (!loading && counter > 0) {
             loading = true;
-            eventEmitter.emit('loading:start');
+            eventEmitter.emit('loadingStatusChanged', loading);
           }
 
         }, 500);
@@ -52,7 +52,7 @@ export default {
 
       if (loading) {
         loading = false;
-        eventEmitter.emit('loading-end');
+        eventEmitter.emit('loadingStatusChanged', loading);
       }
 
     }
