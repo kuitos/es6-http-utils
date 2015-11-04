@@ -105,9 +105,9 @@
 	
 	var _constantsHttpConstantsJs = __webpack_require__(4);
 	
-	var _utilsBaseUtilJs = __webpack_require__(5);
+	var _utilsObjectUtil = __webpack_require__(5);
 	
-	var _utilsWebUtilJs = __webpack_require__(6);
+	var _utilsUrlUtil = __webpack_require__(6);
 	
 	var _cacheLruCacheJs = __webpack_require__(7);
 	
@@ -123,7 +123,7 @@
 	
 	// serialize to json string when payload was an object
 	function defaultRequestTransformer(data) {
-	  return (0, _utilsBaseUtilJs.isObject)(data) && !(0, _utilsBaseUtilJs.isFile)(data) && !(0, _utilsBaseUtilJs.isBlob)(data) && !(0, _utilsBaseUtilJs.isFormData)(data) ? (0, _utilsBaseUtilJs.toJson)(data) : data;
+	  return (0, _utilsObjectUtil.isObject)(data) && !(0, _utilsObjectUtil.isFile)(data) && !(0, _utilsObjectUtil.isBlob)(data) && !(0, _utilsObjectUtil.isFormData)(data) ? (0, _utilsObjectUtil.toJson)(data) : data;
 	}
 	
 	// deserialize response when response content-type was application/json
@@ -151,7 +151,7 @@
 	// execute request|response transformers
 	function executeHttpTransformers(data, headersGetter, status, fns) {
 	
-	  if ((0, _utilsBaseUtilJs.isFunction)(fns)) {
+	  if ((0, _utilsObjectUtil.isFunction)(fns)) {
 	    data = fns(data, headersGetter, status);
 	  } else {
 	    fns.forEach(function (fn) {
@@ -168,7 +168,7 @@
 	
 	    var value = request[prop];
 	    // the prop which response not exist and it is not a function will be combine
-	    if (!(0, _utilsBaseUtilJs.isFunction)(value) && !(prop in response)) {
+	    if (!(0, _utilsObjectUtil.isFunction)(value) && !(prop in response)) {
 	      response[prop] = value;
 	    }
 	  });
@@ -207,18 +207,18 @@
 	      // not undefined or null
 	      if (value != undefined) {
 	
-	        if ((0, _utilsBaseUtilJs.isObject)(value)) {
-	          if ((0, _utilsBaseUtilJs.isDate)(value)) {
+	        if ((0, _utilsObjectUtil.isObject)(value)) {
+	          if ((0, _utilsObjectUtil.isDate)(value)) {
 	            value = value.toISOString();
 	          } else if (Array.isArray(value)) {
 	            // according to rest specification array should be separated by comma in url
 	            value = value.join(',');
 	          } else {
-	            value = (0, _utilsBaseUtilJs.toJson)(value);
+	            value = (0, _utilsObjectUtil.toJson)(value);
 	          }
 	        }
 	
-	        queryParams.push((0, _utilsWebUtilJs.encodeUriQuery)(key) + '=' + (0, _utilsWebUtilJs.encodeUriQuery)(value));
+	        queryParams.push((0, _utilsUrlUtil.encodeUriQuery)(key) + '=' + (0, _utilsUrlUtil.encodeUriQuery)(value));
 	      }
 	    });
 	
@@ -239,7 +239,7 @@
 	
 	  if (requestConfigs.cacheStore) {
 	
-	    var cacheStore = (0, _utilsBaseUtilJs.isObject)(requestConfigs.cacheStore) ? requestConfigs.cacheStore : defaultCacheStore;
+	    var cacheStore = (0, _utilsObjectUtil.isObject)(requestConfigs.cacheStore) ? requestConfigs.cacheStore : defaultCacheStore;
 	    var cacheResp = cacheStore.get(url);
 	
 	    if (cacheResp) {
@@ -268,7 +268,7 @@
 	 */
 	function FetchHttp(url, method, configs) {
 	
-	  if (!(0, _utilsWebUtilJs.urlIsSameOrigin)(url)) {
+	  if (!(0, _utilsUrlUtil.urlIsSameOrigin)(url)) {
 	    configs.mode = 'cors';
 	  }
 	
@@ -379,6 +379,7 @@
 	
 	  cacheStore: false,
 	  interceptors: [],
+	  interceptorBlackList: [],
 	  requestTransformers: [defaultRequestTransformer],
 	  responseTransformers: [defaultResponseTransformer]
 	
@@ -879,7 +880,7 @@
 	exports.encodeUriSegment = encodeUriSegment;
 	exports.encodeUriQuery = encodeUriQuery;
 	
-	var _baseUtilJs = __webpack_require__(5);
+	var _objectUtil = __webpack_require__(5);
 	
 	/**
 	 * url parser
@@ -916,7 +917,7 @@
 	}
 	
 	function urlIsSameOrigin(requestUrl) {
-	  var parsed = (0, _baseUtilJs.isString)(requestUrl) ? urlResolve(requestUrl) : requestUrl;
+	  var parsed = (0, _objectUtil.isString)(requestUrl) ? urlResolve(requestUrl) : requestUrl;
 	  return parsed.protocol === originUrl.protocol && parsed.host === originUrl.host;
 	}
 	
@@ -1438,7 +1439,7 @@
 	
 	var _constantsHttpConstantsJs = __webpack_require__(4);
 	
-	var _utilsWebUtilJs = __webpack_require__(6);
+	var _utilsUrlUtil = __webpack_require__(6);
 	
 	/**
 	 * use params to fill the url template
@@ -1450,7 +1451,7 @@
 	
 	  var generatedUrl = urlTemplate.replace(/:\w+/g, function (match) {
 	    var key = match.substr(1);
-	    return params[key] !== undefined ? (0, _utilsWebUtilJs.encodeUriSegment)(params[key]) : '';
+	    return params[key] !== undefined ? (0, _utilsUrlUtil.encodeUriSegment)(params[key]) : '';
 	  });
 	
 	  generatedUrl = generatedUrl.replace(/\/\//g, '/');
