@@ -1,6 +1,6 @@
 {
   "name": "es6-utils",
-  "version": "1.2.12",
+  "version": "1.2.13",
   "description": "provide some common utils like http request,cache and so on,written by pure ES6",
   "main": "lib/index.js",
   "scripts": {

@@ -332,7 +332,7 @@
 	  return promise.then(function (response) {
 	    return response.data;
 	  }, function (response) {
-	    Promise.reject(response);
+	    return Promise.reject(response);
 	  });
 	}
 	

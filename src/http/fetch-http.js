@@ -231,9 +231,7 @@ function FetchHttp(url, method, configs) {
   }
 
   // resolve response data entity to caller
-  return promise.then(response => response.data, response => {
-    Promise.reject(response);
-  });
+  return promise.then(response => response.data, response => Promise.reject(response));
 }
 
 /**
