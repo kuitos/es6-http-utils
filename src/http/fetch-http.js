@@ -15,65 +15,65 @@ const fetch = window.fetch;
 const Headers = window.Headers;
 
 function getHeadersGetter(headers) {
-    headers = new Headers(headers);
-    return headers.get.bind(headers);
+  headers = new Headers(headers);
+  return headers.get.bind(headers);
 }
 
 // serialize to json string when payload was an object
 function defaultRequestTransformer(data) {
-    return isObject(data) && !isFile(data) && !isBlob(data) && !isFormData(data) ? toJson(data) : data;
+  return isObject(data) && !isFile(data) && !isBlob(data) && !isFormData(data) ? toJson(data) : data;
 }
 
 // deserialize response when response content-type was application/json
 function defaultResponseTransformer(response, headersGetter) {
 
-    let contentType = headersGetter('Content-Type');
+  let contentType = headersGetter('Content-Type');
 
-    if (contentType) {
+  if (contentType) {
 
-        let isDataConsumed = response.hasOwnProperty('data');
+    let isDataConsumed = response.hasOwnProperty('data');
 
-        // because of the Response instance can only consume once,if the response had a data property,it means it had been consumed
-        // so we need to get from data property
-        if (contentType.indexOf(APPLICATION_JSON) === 0) {
-            response.data = isDataConsumed ? response.data : response.json();
-        } else {
-            response.data = isDataConsumed ? response.data : response.text();
-        }
-        // todo handler more content type of data such as images/form,we need to convert them to blob/formData
-
+    // because of the Response instance can only consume once,if the response had a data property,it means it had been consumed
+    // so we need to get from data property
+    if (contentType.indexOf(APPLICATION_JSON) === 0) {
+      response.data = isDataConsumed ? response.data : response.json();
+    } else {
+      response.data = isDataConsumed ? response.data : response.text();
     }
+    // todo handler more content type of data such as images/form,we need to convert them to blob/formData
 
-    return response;
+  }
+
+  return response;
 }
 
 // execute request|response transformers
 function executeHttpTransformers(data, headersGetter, status, fns) {
 
-    if (isFunction(fns)) {
-        data = fns(data, headersGetter, status);
-    } else {
-        fns.forEach(fn => {
-            data = fn(data, headersGetter, status);
-        });
-    }
+  if (isFunction(fns)) {
+    data = fns(data, headersGetter, status);
+  } else {
+    fns.forEach(fn => {
+      data = fn(data, headersGetter, status);
+    });
+  }
 
-    return data;
+  return data;
 }
 
 function combineResponseWithRequest(request, response) {
 
-    Object.keys(request).forEach(prop => {
+  Object.keys(request).forEach(prop => {
 
-        let value = request[prop];
-        // the prop which response not exist and it is not a function will be combine
-        if (!isFunction(value) && !(prop in response)) {
-            response[prop] = value;
-        }
+    let value = request[prop];
+    // the prop which response not exist and it is not a function will be combine
+    if (!isFunction(value) && !(prop in response)) {
+      response[prop] = value;
+    }
 
-    });
+  });
 
-    return response;
+  return response;
 }
 
 /**
@@ -84,53 +84,53 @@ function combineResponseWithRequest(request, response) {
  */
 function transformResponse(request, response) {
 
-    if (response instanceof Error) {
-        throw new TypeError('Response type error when transforming');
-    } else {
-        response = combineResponseWithRequest(request, response);
-        response = executeHttpTransformers(response, getHeadersGetter(response.headers), response.status, response.responseTransformers);
-        return Promise[response.ok ? 'resolve' : 'reject'](response);
-    }
+  if (response instanceof Error) {
+    throw new TypeError('Response type error when transforming');
+  } else {
+    response = combineResponseWithRequest(request, response);
+    response = executeHttpTransformers(response, getHeadersGetter(response.headers), response.status, response.responseTransformers);
+    return Promise[response.ok ? 'resolve' : 'reject'](response);
+  }
 
 }
 
 function buildUrl(url, params) {
 
-    let queryParams = [];
-    let builtUrl = url;
+  let queryParams = [];
+  let builtUrl = url;
 
-    if (params) {
+  if (params) {
 
-        Object.keys(params).sort().forEach(key => {
+    Object.keys(params).sort().forEach(key => {
 
-            let value = params[key];
+      let value = params[key];
 
-            // not undefined or null
-            if (value != undefined) {
+      // not undefined or null
+      if (value != undefined) {
 
-                if (isObject(value)) {
-                    if (isDate(value)) {
-                        value = value.toISOString();
-                    } else if (Array.isArray(value)) {
-                        // according to rest specification array should be separated by comma in url
-                        value = value.join(',');
-                    } else {
-                        value = toJson(value);
-                    }
-                }
-
-                queryParams.push(`${encodeUriQuery(key)}=${encodeUriQuery(value)}`);
-            }
-
-        });
-
-        if (queryParams.length) {
-            builtUrl = `${url}${url.indexOf('?') === -1 ? '?' : '&'}${queryParams.join('&')}`;
+        if (isObject(value)) {
+          if (isDate(value)) {
+            value = value.toISOString();
+          } else if (Array.isArray(value)) {
+            // according to rest specification array should be separated by comma in url
+            value = value.join(',');
+          } else {
+            value = toJson(value);
+          }
         }
 
+        queryParams.push(`${encodeUriQuery(key)}=${encodeUriQuery(value)}`);
+      }
+
+    });
+
+    if (queryParams.length) {
+      builtUrl = `${url}${url.indexOf('?') === -1 ? '?' : '&'}${queryParams.join('&')}`;
     }
 
-    return builtUrl;
+  }
+
+  return builtUrl;
 }
 
 // default cache
@@ -138,25 +138,25 @@ let defaultCacheStore = new LRUCache();
 
 function sendReq(url, requestConfigs) {
 
-    let promise = fetch(url, requestConfigs);
+  let promise = fetch(url, requestConfigs);
 
-    if (requestConfigs.cacheStore) {
+  if (requestConfigs.cacheStore) {
 
-        let cacheStore = isObject(requestConfigs.cacheStore) ? requestConfigs.cacheStore : defaultCacheStore;
-        let cacheResp = cacheStore.get(url);
+    let cacheStore = isObject(requestConfigs.cacheStore) ? requestConfigs.cacheStore : defaultCacheStore;
+    let cacheResp = cacheStore.get(url);
 
-        if (cacheResp) {
-            return Promise.resolve(cacheResp);
-        } else {
-            // we need to store a promise as cache to solve the several async request when they are the same url
-            cacheStore.set(url, promise);
-
-            return promise;
-        }
-
+    if (cacheResp) {
+      return Promise.resolve(cacheResp);
     } else {
-        return promise;
+      // we need to store a promise as cache to solve the several async request when they are the same url
+      cacheStore.set(url, promise);
+
+      return promise;
     }
+
+  } else {
+    return promise;
+  }
 }
 
 /**
@@ -172,66 +172,67 @@ function sendReq(url, requestConfigs) {
  */
 function FetchHttp(url, method, configs) {
 
-    if (!urlIsSameOrigin(url)) {
-        configs.mode = 'cors';
+  if (!urlIsSameOrigin(url)) {
+    configs.mode = 'cors';
+    configs.credentials = 'include';
+  }
+
+  // merge headers
+  configs.headers = Object.assign({}, FetchHttp.defaultConfigs.headers, configs.headers);
+  // copy interceptors from default configs
+  configs.interceptors = Array.from(FetchHttp.defaultConfigs.interceptors);
+
+  // merge method/url and other configs
+  configs = Object.assign({url}, FetchHttp.defaultConfigs, configs, {method: method.toUpperCase()});
+
+  // build url
+  if (configs.params) {
+    url = buildUrl(url, configs.params);
+  }
+
+  let serverRequest = requestConfigs => {
+
+    // execute response transformers
+    let processResponse = response => transformResponse(requestConfigs, response);
+
+    // execute transformers
+    let bodyAfterTransform = executeHttpTransformers(requestConfigs.data, getHeadersGetter(requestConfigs.headers), undefined, requestConfigs.requestTransformers);
+    let configsAfterTransform = Object.assign({body: bodyAfterTransform}, requestConfigs);
+
+    return sendReq(url, configsAfterTransform).then(processResponse, processResponse);
+  };
+
+  // build the request execute chain
+  let chain = [serverRequest, undefined];
+
+  // add interceptors into execute chain which will around the server request
+  let interceptors = configs.interceptors;
+  while (interceptors.length) {
+
+    // The reversal is needed so that we can build up the interception chain around the server request.
+    let interceptor = interceptors.pop();
+
+    if (interceptor.request || interceptor.requestError) {
+      chain.unshift(interceptor.request, interceptor.requestError);
     }
 
-    // merge headers
-    configs.headers = Object.assign({}, FetchHttp.defaultConfigs.headers, configs.headers);
-    // copy interceptors from default configs
-    configs.interceptors = Array.from(FetchHttp.defaultConfigs.interceptors);
-
-    // merge method/url and other configs
-    configs = Object.assign({url}, FetchHttp.defaultConfigs, configs, {method: method.toUpperCase()});
-
-    // build url
-    if (configs.params) {
-        url = buildUrl(url, configs.params);
+    if (interceptor.response || interceptor.responseError) {
+      chain.push(interceptor.response, interceptor.responseError);
     }
+  }
 
-    let serverRequest = requestConfigs => {
+  // execute chain which include interceptors,serverRequest and transformers
+  let promise = Promise.resolve(configs);
+  while (chain.length) {
 
-        // execute response transformers
-        let processResponse = response => transformResponse(requestConfigs, response);
+    let resolveFn = chain.shift();
+    let rejectFn = chain.shift();
 
-        // execute transformers
-        let bodyAfterTransform = executeHttpTransformers(requestConfigs.data, getHeadersGetter(requestConfigs.headers), undefined, requestConfigs.requestTransformers);
-        let configsAfterTransform = Object.assign({body: bodyAfterTransform}, requestConfigs);
+    promise = promise.then(resolveFn, rejectFn);
+  }
 
-        return sendReq(url, configsAfterTransform).then(processResponse, processResponse);
-    };
-
-    // build the request execute chain
-    let chain = [serverRequest, undefined];
-
-    // add interceptors into execute chain which will around the server request
-    let interceptors = configs.interceptors;
-    while (interceptors.length) {
-
-        // The reversal is needed so that we can build up the interception chain around the server request.
-        let interceptor = interceptors.pop();
-
-        if (interceptor.request || interceptor.requestError) {
-            chain.unshift(interceptor.request, interceptor.requestError);
-        }
-
-        if (interceptor.response || interceptor.responseError) {
-            chain.push(interceptor.response, interceptor.responseError);
-        }
-    }
-
-    // execute chain which include interceptors,serverRequest and transformers
-    let promise = Promise.resolve(configs);
-    while (chain.length) {
-
-        let resolveFn = chain.shift();
-        let rejectFn = chain.shift();
-
-        promise = promise.then(resolveFn, rejectFn);
-    }
-
-    // resolve response data entity to caller
-    return promise.then(response => response.data, response => Promise.reject(response));
+  // resolve response data entity to caller
+  return promise.then(response => response.data, response => Promise.reject(response));
 }
 
 /**
@@ -239,25 +240,25 @@ function FetchHttp(url, method, configs) {
  */
 (function createShortMethods(names) {
 
-    names.forEach(name => {
+  names.forEach(name => {
 
-        FetchHttp[name.toLowerCase()] = (url, params, configs = {}) => {
-            configs.params = params;
-            return FetchHttp(url, name, configs);
-        }
-    });
+    FetchHttp[name.toLowerCase()] = (url, params, configs = {}) => {
+      configs.params = params;
+      return FetchHttp(url, name, configs);
+    }
+  });
 
 })([REQUEST_METHODS.GET, REQUEST_METHODS.DELETE, REQUEST_METHODS.HEAD]);
 
 (function createShortMethodsWithPayload(names) {
 
-    names.forEach(name => {
+  names.forEach(name => {
 
-        FetchHttp[name.toLowerCase()] = (url, payload, configs = {}) => {
-            configs.data = payload;
-            return FetchHttp(url, REQUEST_METHODS.POST, configs);
-        }
-    });
+    FetchHttp[name.toLowerCase()] = (url, payload, configs = {}) => {
+      configs.data = payload;
+      return FetchHttp(url, REQUEST_METHODS.POST, configs);
+    }
+  });
 
 })([REQUEST_METHODS.POST, REQUEST_METHODS.PUT, REQUEST_METHODS.PATCH]);
 
@@ -266,18 +267,19 @@ function FetchHttp(url, method, configs) {
  */
 FetchHttp.defaultConfigs = {
 
-    headers    : {
-        'Content-Type'    : `${APPLICATION_JSON};charset=utf-8`,
-        'X-Requested-With': 'https://github.com/kuitos/'
-    },
-    credentials: 'omit',
-    cache      : 'no-cache',
+  headers    : {
+    'Content-Type'    : `${APPLICATION_JSON};charset=utf-8`,
+    'X-Requested-With': 'https://github.com/kuitos/'
+  },
+  credentials: 'same-origin',
+  mode       : 'same-origin',
+  cache      : 'no-cache',
 
-    cacheStore          : false,
-    interceptors        : [],
-    interceptorBlackList: [],
-    requestTransformers : [defaultRequestTransformer],
-    responseTransformers: [defaultResponseTransformer]
+  cacheStore          : false,
+  interceptors        : [],
+  interceptorBlackList: [],
+  requestTransformers : [defaultRequestTransformer],
+  responseTransformers: [defaultResponseTransformer]
 
 };
 
