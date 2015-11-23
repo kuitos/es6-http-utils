@@ -270,6 +270,7 @@
 	
 	  if (!(0, _utilsUrlUtil.urlIsSameOrigin)(url)) {
 	    configs.mode = 'cors';
+	    configs.credentials = 'include';
 	  }
 	
 	  // merge headers
@@ -374,7 +375,8 @@
 	    'Content-Type': _constantsHttpConstantsJs.APPLICATION_JSON + ';charset=utf-8',
 	    'X-Requested-With': 'https://github.com/kuitos/'
 	  },
-	  credentials: 'omit',
+	  credentials: 'same-origin',
+	  mode: 'same-origin',
 	  cache: 'no-cache',
 	
 	  cacheStore: false,
