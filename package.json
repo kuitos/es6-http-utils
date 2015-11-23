@@ -9,8 +9,7 @@
     "build:dist": "webpack --config webpack-build.config.js --progress --profile --colors",
     "dev": "json-mock-kuitos src/mock/db.json -s / -p 8081 & node server.js",
     "codecheck": "NODE_ENV=test eslint src/**",
-    "precommit": "npm run codecheck",
-    "prepush": "npm run build:deploy",
+    "precommit": "npm run codecheck && npm run build:deploy",
     "start": "json-mock-kuitos src/mock/db.json -s / -p 8081 & node server.js",
     "test": "BABEL_JEST_STAGE=0 jest --config .jestrc --verbose --watch"
   },
