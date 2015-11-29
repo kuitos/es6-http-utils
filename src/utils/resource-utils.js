@@ -33,6 +33,6 @@ let ResourceUtils = {
 
 };
 
-ResourceUtils.genResource.bind(ResourceUtils);
+ResourceUtils.genResource = ResourceUtils.genResource.bind(ResourceUtils);
 
 export default ResourceUtils;

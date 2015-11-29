@@ -1707,7 +1707,7 @@
 	
 	};
 	
-	ResourceUtils.genResource.bind(ResourceUtils);
+	ResourceUtils.genResource = ResourceUtils.genResource.bind(ResourceUtils);
 	
 	exports['default'] = ResourceUtils;
 	module.exports = exports['default'];
