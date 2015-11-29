@@ -76,14 +76,19 @@
 	
 	var _cacheLruCacheJs2 = _interopRequireDefault(_cacheLruCacheJs);
 	
-	var _utilsCacheFactory = __webpack_require__(12);
+	var _cacheCacheFactory = __webpack_require__(12);
 	
-	var _utilsCacheFactory2 = _interopRequireDefault(_utilsCacheFactory);
+	var _cacheCacheFactory2 = _interopRequireDefault(_cacheCacheFactory);
+	
+	var _utilsResourceUtils = __webpack_require__(13);
+	
+	var _utilsResourceUtils2 = _interopRequireDefault(_utilsResourceUtils);
 	
 	exports.FetchHttp = _httpFetchHttpJs2['default'];
 	exports.FetchHttpResource = _httpFetchHttpResourceJs2['default'];
 	exports.LRUCache = _cacheLruCacheJs2['default'];
-	exports.CacheFactory = _utilsCacheFactory2['default'];
+	exports.CacheFactory = _cacheCacheFactory2['default'];
+	exports.ResourceUtils = _utilsResourceUtils2['default'];
 
 /***/ },
 /* 2 */
@@ -1580,11 +1585,11 @@
 	FetchHttpResource.defaults = {
 	
 	  actions: {
-	    'get': { method: _constantsHttpConstantsJs.REQUEST_METHODS.GET },
-	    'query': { method: _constantsHttpConstantsJs.REQUEST_METHODS.GET, isArray: true },
-	    'save': { method: _constantsHttpConstantsJs.REQUEST_METHODS.POST },
-	    'update': { method: _constantsHttpConstantsJs.REQUEST_METHODS.PUT },
-	    'partUpdate': { method: _constantsHttpConstantsJs.REQUEST_METHODS.PATCH },
+	    'get': { method: _constantsHttpConstantsJs.REQUEST_METHODS.GET }, // query return object
+	    'query': { method: _constantsHttpConstantsJs.REQUEST_METHODS.GET, isArray: true }, // query return array
+	    'save': { method: _constantsHttpConstantsJs.REQUEST_METHODS.POST }, // save
+	    'update': { method: _constantsHttpConstantsJs.REQUEST_METHODS.PUT }, // batch update
+	    'patch': { method: _constantsHttpConstantsJs.REQUEST_METHODS.PATCH }, // part update
 	    'delete': { method: _constantsHttpConstantsJs.REQUEST_METHODS.DELETE }, // physical delete
 	    'remove': { method: _constantsHttpConstantsJs.REQUEST_METHODS.DELETE } // logical delete
 	  },
@@ -1614,14 +1619,14 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _cacheLruCache = __webpack_require__(7);
+	var _lruCache = __webpack_require__(7);
 	
-	var _cacheLruCache2 = _interopRequireDefault(_cacheLruCache);
+	var _lruCache2 = _interopRequireDefault(_lruCache);
 	
 	var cacheStores = new Map();
 	
 	// default cache constructor was LRU cache,you can change it by `cacheStores.defaultCacheConstructor = xxxCache` for free
-	cacheStores.defaultCacheConstructor = _cacheLruCache2['default'];
+	cacheStores.defaultCacheConstructor = _lruCache2['default'];
 	
 	exports['default'] = {
 	
@@ -1645,6 +1650,58 @@
 	
 	  clear: function clear() {
 	    cacheStores.clear();
+	  }
+	
+	};
+	module.exports = exports['default'];
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * @author Kuitos
+	 * @homepage https://github.com/kuitos/
+	 * @since 2015-11-29
+	 */
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	var _cacheCacheFactory = __webpack_require__(12);
+	
+	var _cacheCacheFactory2 = _interopRequireDefault(_cacheCacheFactory);
+	
+	var _httpFetchHttpResource = __webpack_require__(11);
+	
+	var _httpFetchHttpResource2 = _interopRequireDefault(_httpFetchHttpResource);
+	
+	var _constantsHttpConstants = __webpack_require__(4);
+	
+	exports['default'] = {
+	
+	  API_PREFIX: '',
+	
+	  DEFAULT_REST_CACHE: _cacheCacheFactory2['default'].create('defaultRestCache', 50),
+	
+	  genResource: function genResource(urlTemplate, cache, defaultParams, additionalActions) {
+	
+	    var restHttpCache = cache === undefined ? this.DEFAULT_REST_CACHE : cache;
+	    var DEFAULT_ACTIONS = {
+	      'get': { method: _constantsHttpConstants.REQUEST_METHODS.GET, cache: restHttpCache }, // query return object
+	      'query': { method: _constantsHttpConstants.REQUEST_METHODS.GET, cache: restHttpCache, isArray: true }, // query return array
+	      'save': { method: _constantsHttpConstants.REQUEST_METHODS.POST, cache: restHttpCache }, // save
+	      'update': { method: _constantsHttpConstants.REQUEST_METHODS.PUT, cache: restHttpCache }, // batch update
+	      'patch': { method: _constantsHttpConstants.REQUEST_METHODS.PATCH, cache: restHttpCache }, // part update
+	      'delete': { method: _constantsHttpConstants.REQUEST_METHODS.DELETE, cache: restHttpCache }, // physical delete
+	      'remove': { method: _constantsHttpConstants.REQUEST_METHODS.DELETE, cache: restHttpCache } // logical delete
+	    };
+	
+	    return new _httpFetchHttpResource2['default'](this.API_PREFIX + urlTemplate, defaultParams, Object.assign({}, DEFAULT_ACTIONS, additionalActions));
 	  }
 	
 	};

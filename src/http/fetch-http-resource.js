@@ -140,13 +140,13 @@ class FetchHttpResource {
 FetchHttpResource.defaults = {
 
   actions: {
-    'get'       : {method: REQUEST_METHODS.GET},
-    'query'     : {method: REQUEST_METHODS.GET, isArray: true},
-    'save'      : {method: REQUEST_METHODS.POST},
-    'update'    : {method: REQUEST_METHODS.PUT},
-    'partUpdate': {method: REQUEST_METHODS.PATCH},
-    'delete'    : {method: REQUEST_METHODS.DELETE}, // physical delete
-    'remove'    : {method: REQUEST_METHODS.DELETE}  // logical delete
+    'get'   : {method: REQUEST_METHODS.GET},  // query return object
+    'query' : {method: REQUEST_METHODS.GET, isArray: true}, // query return array
+    'save'  : {method: REQUEST_METHODS.POST}, // save
+    'update': {method: REQUEST_METHODS.PUT},  // batch update
+    'patch' : {method: REQUEST_METHODS.PATCH},  // part update
+    'delete': {method: REQUEST_METHODS.DELETE}, // physical delete
+    'remove': {method: REQUEST_METHODS.DELETE}  // logical delete
   },
 
   stripTrailingSlashes: true

@@ -3,7 +3,7 @@
  * @homepage https://github.com/kuitos/
  * @since 2015-11-29
  */
-import LRUCache from '../cache/lru-cache';
+import LRUCache from './lru-cache';
 
 let cacheStores = new Map();
 
