@@ -7,7 +7,7 @@ import CacheFactory from '../cache/cache-factory';
 import FetchHttpResource from '../http/fetch-http-resource';
 import {REQUEST_METHODS} from '../constants/http-constants';
 
-export default {
+let ResourceUtils = {
 
   API_PREFIX: '',
 
@@ -16,6 +16,7 @@ export default {
   genResource(urlTemplate, cache, defaultParams, additionalActions){
 
     const restHttpCache = (cache === undefined) ? this.DEFAULT_REST_CACHE : cache;
+
     const DEFAULT_ACTIONS = {
       'get'   : {method: REQUEST_METHODS.GET, cache: restHttpCache},  // query return object
       'query' : {method: REQUEST_METHODS.GET, cache: restHttpCache, isArray: true}, // query return array
@@ -31,3 +32,7 @@ export default {
   }
 
 };
+
+ResourceUtils.genResource.bind(ResourceUtils);
+
+export default ResourceUtils;

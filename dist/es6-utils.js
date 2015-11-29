@@ -1682,7 +1682,7 @@
 	
 	var _constantsHttpConstants = __webpack_require__(4);
 	
-	exports['default'] = {
+	var ResourceUtils = {
 	
 	  API_PREFIX: '',
 	
@@ -1691,6 +1691,7 @@
 	  genResource: function genResource(urlTemplate, cache, defaultParams, additionalActions) {
 	
 	    var restHttpCache = cache === undefined ? this.DEFAULT_REST_CACHE : cache;
+	
 	    var DEFAULT_ACTIONS = {
 	      'get': { method: _constantsHttpConstants.REQUEST_METHODS.GET, cache: restHttpCache }, // query return object
 	      'query': { method: _constantsHttpConstants.REQUEST_METHODS.GET, cache: restHttpCache, isArray: true }, // query return array
@@ -1705,6 +1706,10 @@
 	  }
 	
 	};
+	
+	ResourceUtils.genResource.bind(ResourceUtils);
+	
+	exports['default'] = ResourceUtils;
 	module.exports = exports['default'];
 
 /***/ }
