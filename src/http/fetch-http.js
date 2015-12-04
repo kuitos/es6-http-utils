@@ -174,7 +174,6 @@ function FetchHttp(url, method, configs) {
 
   if (!urlIsSameOrigin(url)) {
     configs.mode = 'cors';
-    configs.credentials = 'include';
   }
 
   // merge headers

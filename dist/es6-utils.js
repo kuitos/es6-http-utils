@@ -280,7 +280,6 @@
 	
 	  if (!(0, _utilsUrlUtil.urlIsSameOrigin)(url)) {
 	    configs.mode = 'cors';
-	    configs.credentials = 'include';
 	  }
 	
 	  // merge headers
