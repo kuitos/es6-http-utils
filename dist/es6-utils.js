@@ -1466,7 +1466,7 @@
 	    return params[key] !== undefined ? (0, _utilsUrlUtil.encodeUriSegment)(params[key]) : '';
 	  });
 	
-	  generatedUrl = generatedUrl.replace(/\/\//g, '/');
+	  generatedUrl = generatedUrl.replace(/https?:\/\//, '$&//').replace(/\/\//g, '/');
 	
 	  return generatedUrl;
 	}

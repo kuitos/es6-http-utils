@@ -22,7 +22,7 @@ function genUrlFromTemplate(urlTemplate, params) {
     return params[key] !== undefined ? encodeUriSegment(params[key]) : '';
   });
 
-  generatedUrl = generatedUrl.replace(/\/\//g, '/');
+  generatedUrl = generatedUrl.replace(/https?:\/\//, '$&//').replace(/\/\//g, '/');
 
   return generatedUrl;
 
