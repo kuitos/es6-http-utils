@@ -338,12 +338,7 @@
 	    promise = promise.then(resolveFn, rejectFn);
 	  }
 	
-	  // resolve response data entity to caller
-	  return promise.then(function (response) {
-	    return response.data;
-	  }, function (response) {
-	    return Promise.reject(response);
-	  });
+	  return promise;
 	}
 	
 	/**
@@ -357,7 +352,12 @@
 	      var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	
 	      configs.params = params;
-	      return FetchHttp(url, name, configs);
+	      // resolve response data entity to caller
+	      return FetchHttp(url, name, configs).then(function (response) {
+	        return response.data;
+	      }, function (response) {
+	        return Promise.reject(response);
+	      });
 	    };
 	  });
 	})([_constantsHttpConstantsJs.REQUEST_METHODS.GET, _constantsHttpConstantsJs.REQUEST_METHODS.DELETE, _constantsHttpConstantsJs.REQUEST_METHODS.HEAD]);
@@ -370,7 +370,12 @@
 	      var configs = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	
 	      configs.data = payload;
-	      return FetchHttp(url, _constantsHttpConstantsJs.REQUEST_METHODS.POST, configs);
+	      // resolve response data entity to caller
+	      return FetchHttp(url, _constantsHttpConstantsJs.REQUEST_METHODS.POST, configs).then(function (response) {
+	        return response.data;
+	      }, function (response) {
+	        return Promise.reject(response);
+	      });
 	    };
 	  });
 	})([_constantsHttpConstantsJs.REQUEST_METHODS.POST, _constantsHttpConstantsJs.REQUEST_METHODS.PUT, _constantsHttpConstantsJs.REQUEST_METHODS.PATCH]);
@@ -1566,11 +1571,13 @@
 	
 	      return (0, _fetchHttpJs2['default'])(url, method, configs).then(function (response) {
 	
-	        if (!!action.isArray !== Array.isArray(response)) {
-	          throw new Error(method + ' request to url:' + url + ' occurred an error in resource configuration for action ' + actionName + '.' + ('Expected response to contain an ' + (action.isArray ? 'array' : 'object') + ' but got an ' + (Array.isArray(response) ? 'array' : 'object')));
+	        if (!!action.isArray !== Array.isArray(response.data)) {
+	          throw new Error(method + ' request to url:' + response.url + ' occurred an error in resource configuration for action ' + actionName + '.' + ('Expected response to contain an ' + (action.isArray ? 'array' : 'object') + ' but got an ' + (Array.isArray(response.data) ? 'array' : 'object')));
 	        }
 	
-	        return response;
+	        return response.data;
+	      }, function (response) {
+	        return Promise.reject(response);
 	      });
 	    };
 	  });

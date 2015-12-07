@@ -119,13 +119,13 @@ class FetchHttpResource {
 
         return FetchHttp(url, method, configs).then(response => {
 
-          if (!!action.isArray !== Array.isArray(response)) {
-            throw new Error(`${method} request to url:${url} occurred an error in resource configuration for action ${actionName}.` +
-              `Expected response to contain an ${action.isArray ? 'array' : 'object'} but got an ${Array.isArray(response) ? 'array' : 'object'}`);
+          if (!!action.isArray !== Array.isArray(response.data)) {
+            throw new Error(`${method} request to url:${response.url} occurred an error in resource configuration for action ${actionName}.` +
+              `Expected response to contain an ${action.isArray ? 'array' : 'object'} but got an ${Array.isArray(response.data) ? 'array' : 'object'}`);
           }
 
-          return response;
-        });
+          return response.data;
+        }, response => Promise.reject(response));
 
       }
 

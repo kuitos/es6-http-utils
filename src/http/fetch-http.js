@@ -230,8 +230,7 @@ function FetchHttp(url, method, configs) {
     promise = promise.then(resolveFn, rejectFn);
   }
 
-  // resolve response data entity to caller
-  return promise.then(response => response.data, response => Promise.reject(response));
+  return promise;
 }
 
 /**
@@ -243,7 +242,8 @@ function FetchHttp(url, method, configs) {
 
     FetchHttp[name.toLowerCase()] = (url, params, configs = {}) => {
       configs.params = params;
-      return FetchHttp(url, name, configs);
+      // resolve response data entity to caller
+      return FetchHttp(url, name, configs).then(response => response.data, response => Promise.reject(response));
     }
   });
 
@@ -255,7 +255,8 @@ function FetchHttp(url, method, configs) {
 
     FetchHttp[name.toLowerCase()] = (url, payload, configs = {}) => {
       configs.data = payload;
-      return FetchHttp(url, REQUEST_METHODS.POST, configs);
+      // resolve response data entity to caller
+      return FetchHttp(url, REQUEST_METHODS.POST, configs).then(response => response.data, response => Promise.reject(response));
     }
   });
 
