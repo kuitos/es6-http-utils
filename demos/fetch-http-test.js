@@ -14,7 +14,7 @@ import {FetchHttp} from '../src/index.js';
 
 FetchHttp.get('/posts', undefined, {cacheStore: true}).then(data => {
   console.log('get /posts success!', data);
-})
+});
 
 FetchHttp.get('/posts', undefined, {cacheStore: true}).then(data => {
   console.log('get /posts success!', data);
