@@ -4,40 +4,39 @@
   "description": "provide some common utils like http request,cache and so on,written by pure ES6",
   "main": "lib/index.js",
   "scripts": {
-    "build:deploy": "npm run build:lib & npm run build:dist",
-    "build:lib": "NODE_ENV=production babel src --out-dir lib --ignore **/__tests__",
-    "build:dist": "webpack --config webpack-build.config.js --progress --profile --colors",
-    "dev": "json-mock-kuitos src/mock/db.json -s / -p 8081 & node server.js",
-    "codecheck": "NODE_ENV=test eslint src/**",
-    "precommit": "npm run codecheck && npm run build:deploy",
-    "start": "json-mock-kuitos src/mock/db.json -s / -p 8081 & node server.js",
-    "test": "BABEL_JEST_STAGE=0 jest --config .jestrc --verbose --watch"
+	"build": "npm run build:lib & npm run build:dist",
+	"build:lib": "NODE_ENV=production babel src --out-dir lib --ignore **/__tests__ && git add lib",
+	"build:dist": "webpack --config webpack-build.config.js --progress --profile --colors && git add dist",
+	"dev": "json-mock-kuitos src/mock/db.json -s / -p 8081 & node server.js",
+	"codecheck": "NODE_ENV=test eslint src/**",
+	"prepush": "npm run codecheck && npm run build:deploy",
+	"start": "json-mock-kuitos src/mock/db.json -s / -p 8081 & node server.js",
+	"test": "BABEL_JEST_STAGE=0 jest --config .jestrc --verbose --watch"
   },
   "keywords": [
-    "es6",
-    "fetch api",
-    "rest",
-    "utils",
-    "ajax"
+	"es6",
+	"fetch api",
+	"rest",
+	"utils",
+	"ajax"
   ],
   "author": "Kuitos",
   "license": "MIT",
   "devDependencies": {
-    "babel-core": "^5.4.7",
-    "babel-eslint": "^4.0.5",
-    "babel-jest": "^5.3.0",
-    "babel-loader": "^5.1.2",
-    "eslint": "^1.6.0",
-    "eslint-friendly-formatter": "^1.2.2",
-    "eslint-loader": "^1.1.0",
-    "express": "^4.13.3",
-    "husky": "^0.10.1",
-    "jest-cli": "^0.8.1",
-    "webpack": "^1.11.0",
-    "webpack-dev-middleware": "^1.2.0",
-    "webpack-hot-middleware": "^2.0.0"
-  },
-  "dependencies": {
-    "whatwg-fetch": "^0.10.0"
+	"babel-core": "^5.4.7",
+	"babel-eslint": "^4.0.5",
+	"babel-jest": "^5.3.0",
+	"babel-loader": "^5.1.2",
+	"clean-webpack-plugin": "^0.1.6",
+	"eslint": "^1.6.0",
+	"eslint-friendly-formatter": "^1.2.2",
+	"eslint-loader": "^1.1.0",
+	"eslint-plugin-standard": "^1.3.1",
+	"express": "^4.13.3",
+	"husky": "^0.10.1",
+	"jest-cli": "^0.8.1",
+	"webpack": "^1.11.0",
+	"webpack-dev-middleware": "^1.2.0",
+	"webpack-hot-middleware": "^2.0.0"
   }
 }

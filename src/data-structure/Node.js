@@ -7,10 +7,10 @@
 
 export default class Node {
 
-  constructor(element = null, prevNode = null, nextNode = null) {
-    this.element = element;
-    this.prev = prevNode;
-    this.next = nextNode;
-  }
+	constructor(element = null, prevNode = null, nextNode = null) {
+		this.element = element;
+		this.prev = prevNode;
+		this.next = nextNode;
+	}
 
 }

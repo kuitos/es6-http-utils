@@ -11,7 +11,7 @@ const setTimeout = window.setTimeout;
 const interceptorBlackList = FetchHttp.defaultConfigs.interceptorBlackList;
 
 function isUrlInInterceptorBlackList(url) {
-    return !!~interceptorBlackList.indexOf(url);
+	return !!~interceptorBlackList.indexOf(url);
 }
 
 let counter = 0;
@@ -21,61 +21,61 @@ export let eventEmitter = new EventEmitter();
 
 export default {
 
-    request(request){
+	request(request) {
 
-        if (!isUrlInInterceptorBlackList(request.url)) {
+		if (!isUrlInInterceptorBlackList(request.url)) {
 
-            counter++;
+			counter++;
 
-            if (!loading) {
+			if (!loading) {
 
-                setTimeout(()=> {
+				setTimeout(() => {
 
-                    if (!loading && counter > 0) {
-                        loading = true;
-                        eventEmitter.emit('loadingStatusChanged', loading);
-                    }
+					if (!loading && counter > 0) {
+						loading = true;
+						eventEmitter.emit('loadingStatusChanged', loading);
+					}
 
-                }, 500);
-            }
+				}, 500);
+			}
 
-        }
+		}
 
-        return request;
-    },
+		return request;
+	},
 
-    response(response){
+	response(response) {
 
-        counter--;
+		counter--;
 
-        if (counter === 0) {
+		if (counter === 0) {
 
-            if (loading) {
-                loading = false;
-                eventEmitter.emit('loadingStatusChanged', loading);
-            }
+			if (loading) {
+				loading = false;
+				eventEmitter.emit('loadingStatusChanged', loading);
+			}
 
-        }
+		}
 
-        return response;
+		return response;
 
-    },
+	},
 
-    responseError(response){
+	responseError(response) {
 
-        counter--;
+		counter--;
 
-        if (counter === 0) {
+		if (counter === 0) {
 
-            if (loading) {
-                loading = false;
-                eventEmitter.emit('loadingStatusChanged', loading);
-            }
+			if (loading) {
+				loading = false;
+				eventEmitter.emit('loadingStatusChanged', loading);
+			}
 
-        }
+		}
 
-        return Promise.reject(response);
+		return Promise.reject(response);
 
-    }
+	}
 
-}
+};

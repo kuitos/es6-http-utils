@@ -7,12 +7,12 @@
 
 // 请求方法类型
 export const REQUEST_METHODS = {
-  GET   : 'GET',
-  POST  : 'POST',
-  PUT   : 'PUT',
-  PATCH : 'PATCH',
-  DELETE: 'DELETE',
-  HEAD  : 'HEAD'
+	GET: 'GET',
+	POST: 'POST',
+	PUT: 'PUT',
+	PATCH: 'PATCH',
+	DELETE: 'DELETE',
+	HEAD: 'HEAD'
 };
 
 export const APPLICATION_JSON = 'application/json';

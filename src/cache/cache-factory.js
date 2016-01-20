@@ -12,22 +12,23 @@ cacheStores.defaultCacheConstructor = LRUCache;
 
 export default {
 
-  get(key){
-    return cacheStores.get(key);
-  },
+	'get'(key) {
+		return cacheStores.get(key);
+	},
 
-  create(key, ...args){
-    let cache = new cacheStores.defaultCacheConstructor(...args);
-    cacheStores.set(key, cache);
-    return cache;
-  },
+	create(key, ...args) {
+		let Cache = cacheStores.defaultCacheConstructor;
+		let cache = new Cache(...args);
+		cacheStores.set(key, cache);
+		return cache;
+	},
 
-  delete(key){
-    cacheStores.delete(key);
-  },
+	'delete'(key) {
+		cacheStores.delete(key);
+	},
 
-  clear(){
-    cacheStores.clear();
-  }
+	clear() {
+		cacheStores.clear();
+	}
 
-}
+};

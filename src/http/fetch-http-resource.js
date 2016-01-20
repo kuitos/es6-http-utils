@@ -17,14 +17,14 @@ import {encodeUriSegment} from '../utils/url-util';
  */
 function genUrlFromTemplate(urlTemplate, params) {
 
-  let generatedUrl = urlTemplate.replace(/:\w+/g, function (match) {
-    let key = match.substr(1);
-    return params[key] !== undefined ? encodeUriSegment(params[key]) : '';
-  });
+	let generatedUrl = urlTemplate.replace(/:\w+/g, match => {
+		let key = match.substr(1);
+		return params[key] !== undefined ? encodeUriSegment(params[key]) : '';
+	});
 
-  generatedUrl = generatedUrl.replace(/https?:\/\//, '$&//').replace(/\/\//g, '/');
+	generatedUrl = generatedUrl.replace(/https?:\/\//, '$&//').replace(/\/\//g, '/');
 
-  return generatedUrl;
+	return generatedUrl;
 
 }
 
@@ -36,120 +36,120 @@ function genUrlFromTemplate(urlTemplate, params) {
  */
 function getRestParamsFromUrlTemplate(urlTemplate, params) {
 
-  let restParams = Object.assign({}, params);
+	let restParams = Object.assign({}, params);
 
-  (urlTemplate.match(/:\w+/g) || []).forEach(key => {
-    delete restParams[key.substr(1)];
-  });
+	(urlTemplate.match(/:\w+/g) || []).forEach(key => {
+		delete restParams[key.substr(1)];
+	});
 
-  return restParams;
+	return restParams;
 }
 
 class FetchHttpResource {
 
-  /**
-   * Resource Constructor
-   * @param urlTemplate
-   * @param defaultParams
-   * @param actions
-   *          {get:{method:...,headers:....}} see fetch api config
-   * @returns {} resource instance
-   */
-  constructor(urlTemplate, defaultParams, actions = {}) {
+	/**
+	 * Resource Constructor
+	 * @param urlTemplate
+	 * @param defaultParams
+	 * @param actions
+	 *          {get:{method:...,headers:....}} see fetch api config
+	 * @returns {} resource instance
+	 */
+	constructor(urlTemplate, defaultParams, actions = {}) {
 
-    let resource = {};
-    // POST|PUT|PATCH can have request body according to rest specification
-    let methodsCanHaveBody = [REQUEST_METHODS.POST, REQUEST_METHODS.PUT, REQUEST_METHODS.PATCH];
+		let resource = {};
+		// POST|PUT|PATCH can have request body according to rest specification
+		let methodsCanHaveBody = [REQUEST_METHODS.POST, REQUEST_METHODS.PUT, REQUEST_METHODS.PATCH];
 
-    Object.keys(Object.assign(actions, FetchHttpResource.defaults.actions)).forEach(actionName => {
+		Object.keys(Object.assign(actions, FetchHttpResource.defaults.actions)).forEach(actionName => {
 
-      /**
-       * generate resource method
-       * @returns {Promise.<response>}
-       */
-      resource[actionName] = (...args) => {
+			/**
+			 * generate resource method
+			 * @returns {Promise.<response>}
+			 */
+			resource[actionName] = (...args) => {
 
-        let configs = {},
-          action = actions[actionName],
-          method = action.method,
-          hasBody = !!~methodsCanHaveBody.indexOf(method),
-          params;
+				let configs = {};
+				let action = actions[actionName];
+				let method = action.method;
+				let hasBody = !!~methodsCanHaveBody.indexOf(method);
+				let params;
 
-        switch (args.length) {
+				switch (args.length) {
 
-          case 2:
-            params = args[0];
-            configs.data = args[1];
-            break;
+					case 2:
+						params = args[0];
+						configs.data = args[1];
+						break;
 
-          case 1:
-            if (hasBody) {
-              configs.data = args[0];
-            } else {
-              params = args[0];
-            }
-            break;
+					case 1:
+						if (hasBody) {
+							configs.data = args[0];
+						} else {
+							params = args[0];
+						}
+						break;
 
-          case 0:
-            break;
+					case 0:
+						break;
 
-          default:
-            throw new Error('unexpected arguments!');
+					default:
+						throw new Error('unexpected arguments!');
 
-        }
+				}
 
-        // fill configs from action
-        Object.keys(action).forEach(prop => {
+				// fill configs from action
+				Object.keys(action).forEach(prop => {
 
-          if (prop !== 'isArray') {
-            configs[prop] = action[prop];
-          }
+					if (prop !== 'isArray') {
+						configs[prop] = action[prop];
+					}
 
-        });
+				});
 
-        let extractParams = Object.assign({}, defaultParams, params);
-        let url = genUrlFromTemplate(urlTemplate, extractParams);
+				let extractParams = Object.assign({}, defaultParams, params);
+				let url = genUrlFromTemplate(urlTemplate, extractParams);
 
-        // strip trailing slashes and set the url (unless this behavior is specifically disabled)
-        if (FetchHttpResource.defaults.stripTrailingSlashes) {
-          url = url.replace(/\/+$/, '') || '/';
-        }
+				// strip trailing slashes and set the url (unless this behavior is specifically disabled)
+				if (FetchHttpResource.defaults.stripTrailingSlashes) {
+					url = url.replace(/\/+$/, '') || '/';
+				}
 
-        configs.params = getRestParamsFromUrlTemplate(urlTemplate, extractParams);
+				configs.params = getRestParamsFromUrlTemplate(urlTemplate, extractParams);
 
-        return FetchHttp(url, method, configs).then(response => {
+				return FetchHttp(url, method, configs).then(response => {
 
-          if (!!action.isArray !== Array.isArray(response.data)) {
-            throw new Error(`${method} request to url:${response.url} occurred an error in resource configuration for action ${actionName}.` +
-              `Expected response to contain an ${action.isArray ? 'array' : 'object'} but got an ${Array.isArray(response.data) ? 'array' : 'object'}`);
-          }
+					if (!!action.isArray !== Array.isArray(response.data)) {
+						throw new Error(`${method} request to url:${response.url} occurred an error in resource configuration for action ${actionName}.` +
+							`Expected response to contain an ${action.isArray ? 'array' : 'object'} but got an ${Array.isArray(response.data) ? 'array' : 'object'}`);
+					}
 
-          return response.data;
-        }, response => Promise.reject(response));
+					return response.data;
+				}, response => Promise.reject(response));
 
-      }
+			};
 
-    });
+		});
 
-    return resource;
-  }
+		return resource;
+	}
 
 }
 
 // resource defaults configurations
 FetchHttpResource.defaults = {
 
-  actions: {
-    'get'   : {method: REQUEST_METHODS.GET},  // query return object
-    'query' : {method: REQUEST_METHODS.GET, isArray: true}, // query return array
-    'save'  : {method: REQUEST_METHODS.POST}, // save
-    'update': {method: REQUEST_METHODS.PUT},  // batch update
-    'patch' : {method: REQUEST_METHODS.PATCH},  // part update
-    'delete': {method: REQUEST_METHODS.DELETE}, // physical delete
-    'remove': {method: REQUEST_METHODS.DELETE}  // logical delete
-  },
+	actions: {
+		'get': {method: REQUEST_METHODS.GET},  // query return object
+		'query': {method: REQUEST_METHODS.GET, isArray: true}, // query return array
+		'save': {method: REQUEST_METHODS.POST}, // save
+		'update': {method: REQUEST_METHODS.PUT},  // batch update
+		'patch': {method: REQUEST_METHODS.PATCH},  // part update
+		'delete': {method: REQUEST_METHODS.DELETE}, // physical delete
+		'remove': {method: REQUEST_METHODS.DELETE}  // logical delete
+	},
 
-  stripTrailingSlashes: true
+	stripTrailingSlashes: true
 
 };
 
