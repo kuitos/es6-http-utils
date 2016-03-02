@@ -1,11 +1,11 @@
-### ES6 Utils
-纯ES6实现的工具集，无任何框架依赖。同时提供es5兼容版本
+### ES6 Http Utils
+纯ES6实现的Http工具集，无任何框架依赖。同时提供es5兼容版本
 
 
 #### How to install
 
 ```bash
-npm install es6-utils
+npm install es6-http-utils
 ```
 
 #### 查看demo
