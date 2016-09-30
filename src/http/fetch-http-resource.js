@@ -6,8 +6,8 @@
  */
 
 import FetchHttp from './fetch-http.js';
-import {REQUEST_METHODS} from '../constants/http-constants.js';
-import {encodeUriSegment} from '../utils/url-util';
+import { REQUEST_METHODS } from '../constants/http-constants.js';
+import { encodeUriSegment } from '../utils/url-util';
 
 /**
  * use params to fill the url template
@@ -119,12 +119,14 @@ class FetchHttpResource {
 
 				return FetchHttp(url, method, configs).then(response => {
 
-					if (!!action.isArray !== Array.isArray(response.data)) {
-						throw new Error(`${method} request to url:${response.url} occurred an error in resource configuration for action ${actionName}.` +
-							`Expected response to contain an ${action.isArray ? 'array' : 'object'} but got an ${Array.isArray(response.data) ? 'array' : 'object'}`);
-					}
+					return response.data.then(data => {
+						if (!!action.isArray !== Array.isArray(data)) {
+							throw new Error(`${method} request to url:${response.url} occurred an error in resource configuration for action ${actionName}.` +
+								`Expected response to contain an ${action.isArray ? 'array' : 'object'} but got an ${Array.isArray(response.data) ? 'array' : 'object'}`);
+						}
 
-					return response.data;
+						return data;
+					});
 				}, response => Promise.reject(response));
 
 			};
