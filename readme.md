@@ -1,4 +1,7 @@
 ### ES6 Http Utils
+
+> (Deprecated!) 目前这个库可能不会有太多时间维护，有类似需求的看这里 [axios](https://github.com/mzabriskie/axios) 
+
 纯ES6实现的Http工具集，无任何框架依赖。同时提供es5兼容版本
 
 
